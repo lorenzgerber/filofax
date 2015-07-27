@@ -39,9 +39,9 @@ class EventDB:
     Event class objects.
 
     Attributes:
-        EventList       list        - here all Event
+        event_list       list        - here all Event
                                       class objects are stored
-        selected_Date   date        - the currently selected date
+        selected_date   date         - the currently selected date
 
     Methods:
         saveDB:
@@ -54,6 +54,13 @@ class EventDB:
         addEvent:
         removeEvent:
     """
+
+    def __init__(self, EventList, selected_date):
+        import datetime
+
+        self.event_list = None
+        self.selected_date = datetime.date.today()
+
 
 class Event:
     """This class is the main data container
