@@ -1,19 +1,21 @@
 # Programmeringsteknik webbkurs KTH Kodskelett
 # Lorenz Gerber
-# 22.07.2015
+# 04.08.2015
 # Draft of classes and functions for the
 # '192 Filofax' exercise
 #
-# - data are stored in a file using 'pickle'
-# - per event one line
-# - empty days are created on the fly for
-#   visualisation but not as event objects without
-#   description
+# - two classes: Filofax and Event
+# - data will be stored as objects using module 'pickle'
+# - just events, not days are are stored.
+#   Hence, empty days are created on the fly for visualisation
+# - each event gets a uuid at creation
+# - planned to implement a tkinter GUI
 
 
 class Filofax:
-    """ This class will be a data container for all
-    Event class objects.
+    """ This class is the data container for all
+    Event class objects. It has some attributes to
+    store user navigation parameters in the filofax
 
     Attributes:
         event_list       list        - here all Event
@@ -63,11 +65,11 @@ class Filofax:
     def remove_event(self, event):
         return
 
-    # sets selected date
+    # sets selected_date
     def jump_to_date(self, date):
         return
 
-    # sets selected date to the first day of chosen month
+    # sets selected_date to the first day of chosen month
     def jump_to_month(self, month):
         return
 
@@ -75,11 +77,11 @@ class Filofax:
     def jump_to_event(self, event_id):
         return
 
-    # advances selected_day by one
+    # advances selected_date by one
     def next_day(self):
         return
 
-    # advances selected_day to first of next month
+    # advances selected_date to first of next month
     def next_month(self):
         return
 
@@ -87,11 +89,11 @@ class Filofax:
     def next_event(self):
         return
 
-    # decreases selected_day by one
+    # decreases selected_date by one
     def previous_day(self):
         return
 
-    # decreases selected_day to first of previous month
+    # decreases selected_date to first of previous month
     def previous_month(self):
         return
 
@@ -99,7 +101,7 @@ class Filofax:
     def previous_event(self):
         return
 
-    # print events from selected_day to screen
+    # print events from selected_date to screen
     def show_day(self):
         return
 
@@ -139,6 +141,7 @@ class Event:
     methods:
     """
 
+    # creates a new event object
     def __init__(self, date, time, description):
         return
 
