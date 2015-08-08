@@ -30,6 +30,7 @@ class Filofax:
         jump_to_day:
         jump_to_month:
         jump_to_event:
+        find_event_by_date:
         next_day:
         next_month:
         next_event:
@@ -44,20 +45,42 @@ class Filofax:
         load:
     """
 
-    # creates a new filofax class object
-    def __init__(self, filename):
-        return
+    # instantiates a new filofax class object
+    def __init__(self):
+
+        self.event_list = []
+        self.selected_date = None
+        self.selected_event = None
+        self.selected_day_event_indices = None
+        self.selected_month_event_indices = None
+
+    # prints out the number of entries in the filofax
+    def __str__(self):
+        return 'This Filofax contains ' + str(len(self.event_list)) + ' events.'
 
     # prints out the user menu
     def menu(self):
-        return
+        menu_text = ('\n1. show current event \n' +
+                     '2. show next event event \n' +
+                     '3. show previous event \n' +
+                     '4. enter new event \n' +
+                     '5. remove event \n' +
+                     '6. show all events \n' +
+                     '7. show current day \n' +
+                     '8. show next day \n' +
+                     '9. show previous day \n' +
+                     '10. show current month \n' +
+                     '11. show next month \n' +
+                     '12. show previous month\n' +
+                     '99. save and exit \n ')
+        print(menu_text)
 
     def read_user_selection(self):
-        return
+        return input('make your choice \n')
 
     # adds a new event
     def add_event(self, event):
-        return
+        self.event_list.append(event)
 
     # removes an event
     def remove_event(self, event):
@@ -65,6 +88,7 @@ class Filofax:
 
     # sets selected date
     def jump_to_date(self, date):
+        self.find_event_by_datetime(date, time=0000)
         return
 
     # sets selected date to the first day of chosen month
@@ -74,6 +98,15 @@ class Filofax:
     # sets selected_event to chosen event
     def jump_to_event(self, event_id):
         return
+
+    # finds the event equal or next to given datetime
+    def find_event_by_datetime(self, date, time):
+        from datetime import datetime
+        date = datetime.strptime(str(date), "%y%m%d").date()
+        time = datetime.strptime(str(time), "%H%M").time()
+        search_for = datetime.combine(date, time)
+        #self.sort_events()
+        self.selected_event = [x for x in self.event_list if x.datetime >= search_for][0].unique_id
 
     # advances selected_day by one
     def next_day(self):
@@ -85,7 +118,13 @@ class Filofax:
 
     # advances selected_event to next in time
     def next_event(self):
-        return
+        #self.sort_events()
+        #print(self.selected_event)
+        #self.show_all_events()
+        current_event_index = self.event_list.index([x for x in self.event_list if x.unique_id == self.selected_event][0])
+        self.selected_event = self.event_list[current_event_index+1].unique_id
+        #print(self.selected_event)
+        #self.show_all_events()
 
     # decreases selected_day by one
     def previous_day(self):
@@ -97,7 +136,9 @@ class Filofax:
 
     # decreases selected_event to previous in time
     def previous_event(self):
-        return
+        #self.sort_events()
+        current_event_index = self.event_list.index([x for x in self.event_list if x.unique_id == self.selected_event][0])
+        self.selected_event = self.event_list[current_event_index-1].unique_id
 
     # print events from selected_day to screen
     def show_day(self):
@@ -109,23 +150,33 @@ class Filofax:
 
     # print selected_event to screen
     def show_event(self):
-        return
+        print([x for x in self.event_list if x.unique_id == self.selected_event][0])
 
     # sorts all events according date and time
     def sort_events(self):
-        return
+        self.event_list.sort(key=lambda e: e.datetime)
 
     # prints a sorted list of all events
-    def show_events(self):
-        return
+    def show_all_events(self):
+        self.sort_events()
 
-    # save event_list to file
+        for item in self.event_list:
+            print("{}| {}| {}| {}".format(str(item.datetime.date()).ljust(7),
+                                      str(item.datetime.time()).ljust(5),
+                                      item.description.ljust(50),
+                                      str(item.unique_id)))
+
+    # save event list to file
     def save(self):
-        return
+        import pickle
+        with open('filofaxdata.pkl', 'wb') as output:
+            pickle.dump(self.event_list, output, pickle.HIGHEST_PROTOCOL)
 
     # loads event list from file
     def load(self):
-        return
+        import pickle
+        with open('filofaxdata.pkl', 'rb') as get_data:
+            self.event_list = pickle.load(get_data)
 
 
 class Event:
@@ -140,20 +191,82 @@ class Event:
     """
 
     def __init__(self, date, time, description):
-        return
+        from datetime import datetime
+        from uuid import uuid4
+        date = datetime.strptime(str(date), "%y%m%d").date()
+        time = datetime.strptime(str(time), "%H%M").time()
+        self.unique_id = uuid4()
+        self.datetime = datetime.combine(date, time)
+        self.description = description
 
+    @classmethod
+    def user_input(cls):
+        date_input = input("Please enter date for new event yymmdd: ")
+        time_input = input("Please enter time for new event hhmm: ")
+        cls.description = input("Please enter event description: ")
+        return Event(date_input, time_input, cls.description)
+
+    def __str__(self):
+        event_summary = ('Date: ' + str(self.datetime.date()) + '\n' +
+                         'Time: ' + str(self.datetime.time()) + '\n' +
+                         'Description: ' + str(self.description) + '.')
+        return event_summary
 
 # main
 
-FILENAME = 'event_data.pkl'
-filo = Filofax(FILENAME)
+def main():
+    from datetime import datetime
 
-# menu_select = '';
-# while menu_select != '99':
-#     filo.meny()
-#     menu_select = filo.read_user_selection()
-#     # Utför detta val.
+    filo = Filofax()
+    filo.load()
 
-filo.save(FILENAME)
+    # set selected_date
+    filo.selected_date = datetime.today().date()
+
+    #set selected_event
+    filo.find_event_by_datetime(filo.selected_date.strftime("%y%m%d"), datetime.now().strftime("%H%M"))
+
+    #show current event
+    print('\nToday is the ' + str(datetime.today().date()) + '\n' +
+          'The next upcoming event is : \n')
+    filo.show_event()
+
+    # user menu loop
+    menu_select = ''
+    while menu_select != '99':
 
 
+
+
+        filo.menu()
+        menu_select = filo.read_user_selection()
+
+        if menu_select == '1':
+            filo.show_event()
+
+        if menu_select == '2':
+            filo.next_event()
+            filo.show_event()
+
+        if menu_select == '3':
+            filo.previous_event()
+            filo.show_event()
+
+        if menu_select == '4':
+            filo.add_event(Event.user_input())
+
+        if menu_select == '6':
+            filo.show_all_events()
+
+    filo.save()
+    return filo
+
+main()
+
+#### create some records
+#filo = Filofax()
+#filo.load()
+#filo.add_event(Event(151022,2200, 'drink a beer with Fritz'))
+#filo.add_event(Event(151022,1200, 'eat lunch with Paul'))
+#filo.add_event(Event(151023,1400, 'drink a coffee with Susanne'))
+#filo.save()

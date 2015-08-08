@@ -49,7 +49,17 @@ class Filofax:
 
     # prints out the user menu
     def menu(self):
-        return
+        menu_text = ('1. next \n +'
+                     '2. previous \n +'
+                     '3. new event \n +'
+                     '4. remove event \n +'
+                     '5. show all events \n +'
+                     '99. save and exit \n ')
+        return menu_text
+
+    def read_user_selection(self):
+        return input('make your choice')
+
 
     # adds a new event
     def add_event(self, event):
@@ -114,13 +124,15 @@ class Event:
 
 def main():
     filo = Filofax()
-    print(filo)
-    print('Load Data...\n')
     filo.load()
-    print(filo)
-    print("""
-    1. new entry
-    2. exit)
+
+    menu_select = ''
+
+    while menu_select != '99':
+        filo.menu()
+        menu_select = filo.read_user_selection()
+
+    filo.save()
     return filo
 
 main()
