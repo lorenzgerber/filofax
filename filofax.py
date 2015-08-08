@@ -5,7 +5,7 @@
 # '192 Filofax' exercise
 #
 # - data are stored in a file using 'pickle'
-# - per event one line
+# - each event one line
 # - empty days are created on the fly for
 #   visualisation but not as event objects without
 #   description
@@ -49,10 +49,10 @@ class Filofax:
     def __init__(self):
 
         self.event_list = []
-        self.selected_date = None
         self.selected_event = None
-        self.selected_day_event_indices = []
-        self.selected_month_event_indices = []
+        self.selected_date = None
+        self.selected_day_indices = []
+        self.selected_month_indices = []
 
     # prints out the number of entries in the filofax
     def __str__(self):
@@ -87,17 +87,46 @@ class Filofax:
         remove_event_index = self.event_list.index([x for x in self.event_list if x.unique_id == event][0])
         del self.event_list[remove_event_index]
 
+    # populate the day_indices from selected_date
+    def populate_day_indices(self):
+        try:
+            day_indices = self.event_list.index(
+                [x for x in self.event_list if x.datetime.date() == self.selected_date]
+            )
+        except ValueError:
+            day_indices = []
+        self.selected_day_indices = day_indices
+
+    # populate the month_indices from the selected_date
+
     # sets selected date
     def jump_to_date(self, date):
+        # check if there is an event on date
+        # find event_id and set selected_event
         self.find_event_by_datetime(date, time=0000)
+        # call update_chain
         return
 
     # sets selected date to the first day of chosen month
     def jump_to_month(self, month):
+        # check if there is an event in the month
+        # look up event_id of first event in month and set to selected_event
+        # call update_chain
         return
 
     # sets selected_event to chosen event
     def jump_to_event(self, event_id):
+        # check if there is an event with event_id
+        # set selected_event to event_id
+        # call update_chain
+        return
+
+    # update from event_id, date, day_indices, month_indices
+    def update_chain(self):
+        # check date of selected_event
+        # update selected_date
+        # populate day_indices
+        # populate month_indices
         return
 
     # finds the event equal or next to given datetime
@@ -106,8 +135,9 @@ class Filofax:
         date = datetime.strptime(str(date), "%y%m%d").date()
         time = datetime.strptime(str(time), "%H%M").time()
         search_for = datetime.combine(date, time)
-        #self.sort_events()
+        self.sort_events()
         self.selected_event = [x for x in self.event_list if x.datetime >= search_for][0].unique_id
+        self.selected_date = date
 
     # advances selected_day by one
     def next_day(self):
@@ -115,42 +145,55 @@ class Filofax:
 
     # advances selected_day to first of next month
     def next_month(self):
+        # check if there is an event in the next month
+        # set selected_event to first event in next month
+        # call update_chain
         return
 
     # advances selected_event to next in time
     def next_event(self):
-        #self.sort_events()
-        #print(self.selected_event)
-        #self.show_all_events()
+        # look up selected_event and advance by one in time
         current_event_index = self.event_list.index([x for x in self.event_list if x.unique_id == self.selected_event][0])
         self.selected_event = self.event_list[current_event_index+1].unique_id
-        #print(self.selected_event)
-        #self.show_all_events()
+        # call update_chain
+
 
     # decreases selected_day by one
     def previous_day(self):
+        # check if there is an event day before selected_date
+        # find first event on day before selected_date and set selected_event
+        # call update_chain
         return
 
     # decreases selected_day to first of previous month
     def previous_month(self):
+        # check if there is event one month before selected_date
+        # find first event in month before selected_date and set selected_event
+        # call update_chain
         return
 
     # decreases selected_event to previous in time
     def previous_event(self):
-        #self.sort_events()
+        # check if there is event before selected_event
+        # set selected_event to one before in time to current selected_event
+        self.sort_events()
         current_event_index = self.event_list.index([x for x in self.event_list if x.unique_id == self.selected_event][0])
         self.selected_event = self.event_list[current_event_index-1].unique_id
+        # update chain
 
     # print events from selected_day to screen
     def show_day(self):
+        # output content of day_indices
         return
 
     # print events from month of selected_day to screen
     def show_month(self):
+        # output content of month_indices
         return
 
     # print selected_event to screen
     def show_event(self):
+        # output content of selected_event
         print([x for x in self.event_list if x.unique_id == self.selected_event][0])
 
     # sorts all events according date and time
@@ -163,9 +206,9 @@ class Filofax:
 
         for item in self.event_list:
             print("{}| {}| {}| {}".format(str(item.datetime.date()).ljust(7),
-                                      str(item.datetime.time()).ljust(5),
-                                      item.description.ljust(50),
-                                      str(item.unique_id)))
+                                          str(item.datetime.time()).ljust(5),
+                                          item.description.ljust(50),
+                                          str(item.unique_id)))
 
     # save event list to file
     def save(self):
@@ -242,20 +285,25 @@ def main():
         filo.menu()
         menu_select = filo.read_user_selection()
 
+        # show current event
         if menu_select == '1':
             filo.show_event()
 
+        # next event
         if menu_select == '2':
             filo.next_event()
             filo.show_event()
 
+        # previous event
         if menu_select == '3':
             filo.previous_event()
             filo.show_event()
 
+        # add event
         if menu_select == '4':
             filo.add_event(Event.user_input())
 
+        # remove event
         if menu_select == '5':
             print('current event is: \n')
             filo.show_event()
@@ -267,8 +315,14 @@ def main():
                 filo.find_event_by_datetime(filo.selected_date.strftime("%y%m%d"), datetime.now().strftime("%H%M"))
 
 
+        # show all events
         if menu_select == '6':
             filo.show_all_events()
+
+        # show current day
+        if menu_select == '7':
+            filo.populate_day_event_indices()
+
 
     filo.save()
     return filo
