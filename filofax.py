@@ -51,8 +51,8 @@ class Filofax:
         self.event_list = []
         self.selected_date = None
         self.selected_event = None
-        self.selected_day_event_indices = None
-        self.selected_month_event_indices = None
+        self.selected_day_event_indices = []
+        self.selected_month_event_indices = []
 
     # prints out the number of entries in the filofax
     def __str__(self):
@@ -84,7 +84,8 @@ class Filofax:
 
     # removes an event
     def remove_event(self, event):
-        return
+        remove_event_index = self.event_list.index([x for x in self.event_list if x.unique_id == event][0])
+        del self.event_list[remove_event_index]
 
     # sets selected date
     def jump_to_date(self, date):
@@ -254,6 +255,17 @@ def main():
 
         if menu_select == '4':
             filo.add_event(Event.user_input())
+
+        if menu_select == '5':
+            print('current event is: \n')
+            filo.show_event()
+            remove_yes_no = input('\nDo you want to remove this event? (yes/no)\n')
+            if remove_yes_no  == 'yes':
+                filo.remove_event(filo.selected_event)
+                print('Event removed')
+                # reset selected event
+                filo.find_event_by_datetime(filo.selected_date.strftime("%y%m%d"), datetime.now().strftime("%H%M"))
+
 
         if menu_select == '6':
             filo.show_all_events()
