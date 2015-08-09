@@ -53,15 +53,7 @@ class Filofax:
 
     # creates a new filofax class object
     def __init__(self, filename):
-        import datetime
-
-        self.event_list = []
-        self.selected_date = datetime.date.today()
-        return 'Filofax object created'
-
-    # prints out the number of entries in the filofax
-    def __str__(self):
-        return 'This Filofax contains ' + str(len(self.event_list)) + ' events.'
+        return
 
     # prints out the user menu
     def menu(self):
@@ -72,8 +64,7 @@ class Filofax:
 
     # adds a new event
     def add_event(self, event):
-        self.event_list.append(event)
-        return 'event added'
+        return
 
     # removes an event
     def remove_event(self, event):
@@ -129,29 +120,19 @@ class Filofax:
 
     # sorts all events according date and time
     def sort_events(self):
-        self.event_list.sort(key=lambda e: e.datetime)
-        return 'all events sorted'
+        return
 
     # prints a sorted list of all events
     def show_events(self):
-        self.sort_events()
-
-        for item in self.event_list:
-            print("{}| {}| {}".format(str(item.datetime.date()).ljust(7),
-                                      str(item.datetime.time()).ljust(5),
-                                      item.description))
+        return
 
     # save event_list to file
     def save(self):
-        import pickle
-        with open('filofaxdata.pkl', 'wb') as output:
-            pickle.dump(self.event_list, output, pickle.HIGHEST_PROTOCOL)
+        return
 
     # loads event list from file
     def load(self):
-        import pickle
-        with open('filofaxdata.pkl', 'rb') as get_data:
-            self.event_list = pickle.load(get_data)
+        return
 
 
 class Event:
@@ -167,36 +148,23 @@ class Event:
 
     # creates a new event object
     def __init__(self, date, time, description):
-        from datetime import datetime
-        date = datetime.strptime(str(date), "%y%m%d").date()
-        time = datetime.strptime(str(time), "%H%M").time()
-        self.datetime = datetime.combine(date, time)
-        self.description = description
-
-    @classmethod
-    def user_input(cls):
-        date_input = input("Please enter date for new event yymmdd: ")
-        time_input = input("Please enter time for new event hhmm: ")
-        cls.description = input("Please enter event description: ")
-        return Event(date_input, time_input, cls.description)
-
-    def __str__(self):
-        event_summary = ('Date: ' + str(self.datetime.date()) + '\n' +
-                         'Time: ' + str(self.datetime.time()) + '\n' +
-                         'Description: ' + str(self.description) + '.')
-        return event_summary
+        return
 
 
-# main
-
-FILENAME = 'event_data.pkl'
-filo = Filofax(FILENAME)
-
-menu_select = ''
-while menu_select != '99':
-    filo.meny()
-    menu_select = filo.read_user_selection()
-
-filo.save(FILENAME)
+# main program
+def main():
+    
+    # loading data
+    FILENAME = 'event_data.pkl'
+    filo = Filofax(FILENAME)
+    menu_select = ''
+    
+    # main loop that runs until user exits with string '99'
+    while menu_select != '99':
+        filo.meny()
+        menu_select = filo.read_user_selection()
+    
+    # saving date
+    filo.save(FILENAME)
 
 
