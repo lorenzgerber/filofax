@@ -11,6 +11,7 @@
 #   description
 
 
+
 class Filofax:
     """ This class will be a data container for all
     Event class objects.
@@ -78,7 +79,7 @@ class Filofax:
     def read_user_selection(self):
         return input('make your choice \n')
 
-    # adds a new event
+    # add a new event
     def add_event(self, event):
         self.event_list.append(event)
 
@@ -86,6 +87,39 @@ class Filofax:
     def remove_event(self, event):
         remove_event_index = self.event_list.index([x for x in self.event_list if x.unique_id == event][0])
         del self.event_list[remove_event_index]
+
+
+
+
+
+
+
+    # populate: selected_event, selected_date, day_indices, month_indices
+
+
+    # populate selected date from selected_event
+    def populate_selected_date(self):
+        current_event_index = self.event_list.index([x for x in self.event_list if x.unique_id == self.selected_event][0])
+        self.selected_date = self.event_list[current_event_index].datetime
+
+    # populate selected_event from selected_date for day jump
+    # find if there is an event on the selected day
+    def populate_selected_event_day(self):
+        self.sort_events()
+        try:
+            self.selected_event = [x for x in self.event_list if x.datetime.date() == self.selected_date.date()][0].unique_id
+        except ValueError:
+            self.selected_event = None
+
+    # populate selected_event from selected_date for month jump
+    # find if there is an event within the month of selected_date
+    def populate_selected_event_month(self):
+        self.sort_events()
+        try:
+            self.selected_event = [x for x in self.event_list if x.datetime.year == self.selected_date.year
+                                   and x.datetime.month == self.selected_date.month][0].unique_id
+        except ValueError:
+            self.selected_event = None
 
     # populate the day_indices from selected_date
     def populate_day_indices(self):
@@ -95,62 +129,120 @@ class Filofax:
             )
         except ValueError:
             day_indices = []
+            print('There are no events in day: ', + self.selected_date.date())
         self.selected_day_indices = day_indices
 
     # populate the month_indices from the selected_date
+    def populate_month_indices(self):
+        try:
+            month_indices = self.event_list.index(
+                [x for x in self.event_list if x.datetime.date().year == self.selected_date.year
+                 and x.datetime.date().month == self.selected_date.month]
+            )
+        except ValueError:
+            month_indices = []
+            print('There are no events in month: ', + self.selected_date.year + ' ' + self.selected_date.month)
+        self.selected_month_indices = month_indices
 
-    # sets selected date
-    def jump_to_date(self, date):
-        # check if there is an event on date
-        # find event_id and set selected_event
-        self.find_event_by_datetime(date, time=0000)
-        # call update_chain
+
+
+
+
+
+    # update chains
+
+    # update from selected_event: selected_date, day_indices, month_indices
+    def update_chain(self):
+        # update selected_date
+        self.populate_selected_date()
+        # populate day_indices
+        self.populate_day_indices()
+        # populate month_indices
+        self.populate_month_indices()
+
+    # update from selected_date for day jump: selected_event, day_indices, month_indices
+    def update_chain_day(self):
+        # update selected_event
+        self.populate_selected_event_day()
+        # update day_indices
+        self.update_chain_day()
+        # update month_indices
+        self.update_chain_month()
         return
+
+
+    # update from selected_date for month jump:
+    def update_chain_month(self):
+        # update selected_event
+        self.populate_selected_event_month()
+        # update day_indices
+        self.update_chain_day()
+        # update mont_indices
+        self.update_chain_month()
+
+
+
+
+
+    # Jumps to date 'date_time' or date of next event after 'date_time'
+    def jump_to_date(self, date_time):
+        # find event_id and of next event equal or bigger than
+        # date_time and set selected_event to it
+        self.find_event_by_datetime(date_time)
+        # call update_chain
+        self.update_chain()
 
     # sets selected date to the first day of chosen month
-    def jump_to_month(self, month):
-        # check if there is an event in the month
+    # can result in empty selected event etc.
+    def jump_to_month(self, date_time):
         # look up event_id of first event in month and set to selected_event
         # call update_chain
-        return
+        self.update_chain()
 
     # sets selected_event to chosen event
+    # should always work
     def jump_to_event(self, event_id):
         # check if there is an event with event_id
         # set selected_event to event_id
         # call update_chain
-        return
+        self.update_chain()
 
-    # update from event_id, date, day_indices, month_indices
-    def update_chain(self):
-        # check date of selected_event
-        # update selected_date
-        # populate day_indices
-        # populate month_indices
-        return
 
     # finds the event equal or next to given datetime
-    def find_event_by_datetime(self, date, time):
+    # date input as date time. Will be stripped to
+    # year, month, day, hour, minute
+    # This function can be used to get a valid entry for selected event
+    def find_event_by_datetime(self, date_time):
         from datetime import datetime
-        date = datetime.strptime(str(date), "%y%m%d").date()
-        time = datetime.strptime(str(time), "%H%M").time()
-        search_for = datetime.combine(date, time)
+        date_time = datetime(date_time.year, date_time.month, date_time.day, date_time.hour, date_time.minute)
         self.sort_events()
-        self.selected_event = [x for x in self.event_list if x.datetime >= search_for][0].unique_id
-        self.selected_date = date
+        self.selected_event = [x for x in self.event_list if x.datetime >= date_time][0].unique_id
+
+
+
+
+
+    # methods to go back and forth by one unit, event, day and month
 
     # advances selected_day by one
+    # This can yield empty lists for day and month
     def next_day(self):
+        # check if there is an event on the next day
+        # set selected_event to first event of next day
+        # call update_chain
         return
 
     # advances selected_day to first of next month
+    # This can yield empty lists for day and month
     def next_month(self):
         # check if there is an event in the next month
+        # new_month = selected_date.date().month +1
         # set selected_event to first event in next month
         # call update_chain
         return
 
     # advances selected_event to next in time
+    # This will always yield an entry for selected event
     def next_event(self):
         # look up selected_event and advance by one in time
         current_event_index = self.event_list.index([x for x in self.event_list if x.unique_id == self.selected_event][0])
@@ -159,6 +251,7 @@ class Filofax:
 
 
     # decreases selected_day by one
+    # This can yield empty lists for day and month
     def previous_day(self):
         # check if there is an event day before selected_date
         # find first event on day before selected_date and set selected_event
@@ -166,6 +259,7 @@ class Filofax:
         return
 
     # decreases selected_day to first of previous month
+    # This can yield empty lists for day and month
     def previous_month(self):
         # check if there is event one month before selected_date
         # find first event in month before selected_date and set selected_event
@@ -173,6 +267,7 @@ class Filofax:
         return
 
     # decreases selected_event to previous in time
+    # this will always yield a selected event
     def previous_event(self):
         # check if there is event before selected_event
         # set selected_event to one before in time to current selected_event
@@ -180,6 +275,11 @@ class Filofax:
         current_event_index = self.event_list.index([x for x in self.event_list if x.unique_id == self.selected_event][0])
         self.selected_event = self.event_list[current_event_index-1].unique_id
         # update chain
+
+
+
+
+    # Print commands
 
     # print events from selected_day to screen
     def show_day(self):
@@ -196,9 +296,6 @@ class Filofax:
         # output content of selected_event
         print([x for x in self.event_list if x.unique_id == self.selected_event][0])
 
-    # sorts all events according date and time
-    def sort_events(self):
-        self.event_list.sort(key=lambda e: e.datetime)
 
     # prints a sorted list of all events
     def show_all_events(self):
@@ -209,6 +306,15 @@ class Filofax:
                                           str(item.datetime.time()).ljust(5),
                                           item.description.ljust(50),
                                           str(item.unique_id)))
+
+
+
+
+    # additional methods / help methods
+
+    # sorts all events according date and time
+    def sort_events(self):
+        self.event_list.sort(key=lambda e: e.datetime)
 
     # save event list to file
     def save(self):
@@ -222,6 +328,14 @@ class Filofax:
         with open('filofaxdata.pkl', 'rb') as get_data:
             self.event_list = pickle.load(get_data)
 
+    # help function string date and time to datetime
+    @staticmethod
+    def string_date_time_convert(date, time):
+        from datetime import datetime
+        date = datetime.strptime(str(date), "%y%m%d").date()
+        time = datetime.strptime(str(time), "%H%M").time()
+        date_time = datetime.combine(date, time)
+        return date_time
 
 class Event:
     """This class is the main data container
@@ -234,21 +348,24 @@ class Event:
     methods:
     """
 
+    # date and time as date/time/datetime.date()/datetime.time() objects
     def __init__(self, date, time, description):
         from datetime import datetime
         from uuid import uuid4
-        date = datetime.strptime(str(date), "%y%m%d").date()
-        time = datetime.strptime(str(time), "%H%M").time()
         self.unique_id = uuid4()
+        time = datetime.datetime(time.hour, time.minute)
         self.datetime = datetime.combine(date, time)
         self.description = description
 
     @classmethod
     def user_input(cls):
+        from datetime import datetime
         date_input = input("Please enter date for new event yymmdd: ")
         time_input = input("Please enter time for new event hhmm: ")
+        cls.date = datetime.strptime(str(date_input), "%y%m%d").date()
+        cls.time = datetime.strptime(str(time_input), "%H%M").time()
         cls.description = input("Please enter event description: ")
-        return Event(date_input, time_input, cls.description)
+        return Event(cls.date, cls.time, cls.description)
 
     def __str__(self):
         event_summary = ('Date: ' + str(self.datetime.date()) + '\n' +
@@ -265,10 +382,13 @@ def main():
     filo.load()
 
     # set selected_date
-    filo.selected_date = datetime.today().date()
+    filo.selected_date = datetime.now()
+    filo.selected_date = datetime(filo.selected_date.year, filo.selected_date.month, filo.selected_date.day,
+                                            filo.selected_date.hour, filo.selected_date.minute)
+
 
     #set selected_event
-    filo.find_event_by_datetime(filo.selected_date.strftime("%y%m%d"), datetime.now().strftime("%H%M"))
+    filo.find_event_by_datetime(filo.selected_date)
 
     #show current event
     print('\nToday is the ' + str(datetime.today().date()) + '\n' +
@@ -312,7 +432,7 @@ def main():
                 filo.remove_event(filo.selected_event)
                 print('Event removed')
                 # reset selected event
-                filo.find_event_by_datetime(filo.selected_date.strftime("%y%m%d"), datetime.now().strftime("%H%M"))
+                filo.find_event_by_datetime(filo.selected_date)
 
 
         # show all events
