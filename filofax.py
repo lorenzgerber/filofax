@@ -30,19 +30,18 @@ class Filofax:
         menu:
         read_user_selection:
         add_event:
+        remove_event_interface:
         remove_event:
         populate_selected_event_date:
         populate_selected_date:
         populate_selected_event_day:
         populate_selected_event_month:
         populate_day_uuids:
-        populate month_indices:
+        populate month_uuids:
         update_chain_event:
         update_chain_day:
         update_chain_month:
         jump_to_date:
-        jump_to_month:
-        jump_to_event:
         find_event_by_datetime:
         last_event:
         first_event:
@@ -88,6 +87,7 @@ class Filofax:
 
     # prints out the user menu
     def menu(self):
+        mode = 'event'
         if self.mode == 0:
             mode = 'event'
         elif self.mode == 1:
@@ -130,12 +130,11 @@ class Filofax:
 
         self.show_event()
         remove_yes_no = input('\nDo you want to remove this event? (yes/no)\n')
-        if remove_yes_no  == 'yes':
+        if remove_yes_no == 'yes':
             self.remove_event(self.selected_event)
             print('Event removed')
             # reset selected event
             self.find_event_by_datetime(self.selected_date)
-
 
     # removes an event
     def remove_event(self, event):
@@ -246,13 +245,14 @@ class Filofax:
 
     # Jumps to date 'date_time' or date of next event after 'date_time'
     def jump_to_date(self):
+        from datetime import datetime
         # find event_id and of next event equal or bigger than
         # date_time and set selected_event to it
         if self.mode == 1:
             self.selected_date = datetime.strptime(str(input('Please enter date (yymmdd):')), "%y%m%d")
         elif self.mode == 2:
             self.selected_date = datetime.strptime(str(input('Please enter month (yymm):') +
-                                                           str(self.selected_date.day)), "%y%m%d")
+                                                       str(self.selected_date.day)), "%y%m%d")
         self.populate_day_uuids()
         self.populate_month_uuids()
 
@@ -332,7 +332,6 @@ class Filofax:
         self.selected_date = self.delta_months(self.selected_date, 1)
         self.populate_month_uuids()
 
-
     # select correct method based on self.mode
     def previous_unit(self):
         if self.mode == 0:
@@ -342,7 +341,7 @@ class Filofax:
         elif self.mode == 2:
             self.previous_month()
 
-    #previous event
+    # previous event
     def previous_event(self):
         # check if there is event before selected_event
         # set selected_event to one before in time to current selected_event
@@ -358,18 +357,14 @@ class Filofax:
     def previous_day(self):
         from datetime import timedelta
         self.sort_events()
-        self.selected_date = self.selected_date - timedelta(days = 1)
+        self.selected_date = self.selected_date - timedelta(days=1)
         self.populate_day_uuids()
-
 
     # previous month
     def previous_month(self):
         self.sort_events()
         self.selected_date = self.delta_months(self.selected_date, -1)
         self.populate_month_uuids()
-
-
-
 
     ################
     # Print commands
@@ -396,7 +391,6 @@ class Filofax:
         except IndexError:
             print('\nThere is currently no event selected\n')
 
-
     # print events from selected_day to screen
     def show_day(self):
         # output content of day_indices
@@ -405,14 +399,12 @@ class Filofax:
             self.selected_event = [x for x in self.event_list if x.unique_id == iii][0].unique_id
             self.show_event()
 
-
     # print events from month of selected_day to screen
     def show_month(self):
         print('\nSelected month is ' + str(self.selected_date.strftime('%B %Y')) + '\n')
         for iii in self.selected_month_uuids:
             self.selected_event = [x for x in self.event_list if x.unique_id == iii][0].unique_id
             self.show_event()
-
 
     # prints a sorted list of all events
     def show_all_events(self):
@@ -424,19 +416,16 @@ class Filofax:
                                           item.description.ljust(50),
                                           str(item.unique_id)))
 
-
-
-
     # additional methods / help methods
     @staticmethod
     def delta_months(source_date, months):
         import datetime
         import calendar
         month = source_date.month - 1 + months
-        year = int(source_date.year + month / 12 )
+        year = int(source_date.year + month / 12)
         month = month % 12 + 1
-        day = min(source_date.day,calendar.monthrange(year,month)[1])
-        return datetime.date(year,month,day)
+        day = min(source_date.day, calendar.monthrange(year, month)[1])
+        return datetime.date(year, month, day)
 
     # sorts all events according date and time
     def sort_events(self):
@@ -462,7 +451,8 @@ class Filofax:
         time = datetime.strptime(str(time), "%H%M").time()
         date_time = datetime.combine(date, time)
         return date_time
-    
+
+
 # help function ot set datetime precision to YMDHM
 def datetime_filofax(datetime_in):
     from datetime import datetime
@@ -470,9 +460,6 @@ def datetime_filofax(datetime_in):
                             datetime_in.day, datetime_in.hour,
                             datetime_in.minute)
     return datetime_out
-
-
-
 
 
 class Event:
@@ -488,11 +475,8 @@ class Event:
 
     # date and time as date/time/datetime.date()/datetime.time() objects
     def __init__(self, date_time, description):
-        from datetime import datetime
         from uuid import uuid4
         self.unique_id = uuid4()
-        #time = datetime.time(time.hour, time.minute)
-        #self.date_time = datetime.combine(date, time)
         self.date_time = date_time
         self.description = description
 
@@ -515,8 +499,8 @@ class Event:
                          'Description: ' + str(self.description) + '.')
         return event_summary
 
-# main
 
+# main
 def main():
     from datetime import datetime
 
@@ -528,10 +512,10 @@ def main():
     # set format/precision to Year, Month, day, hour, minutes
     filo.selected_date = datetime_filofax(filo.selected_date)
 
-    #set selected_event
+    # set selected_event
     filo.find_event_by_datetime(filo.selected_date)
 
-    #show current event
+    # show current event
     print('\nToday is the ' + str(datetime.today().date()) + '\n' +
           'The next upcoming event is : \n')
     filo.show_event()
@@ -539,7 +523,6 @@ def main():
     # user menu loop
     menu_select = ''
     while menu_select != '99':
-
 
         filo.menu()
         menu_select = filo.read_user_selection()
@@ -601,7 +584,6 @@ def main():
             print('\nDatabase saved\n')
 
         print('\nYou did not enter a valid choice! try again...\n')
-
 
     filo.save()
     return filo
