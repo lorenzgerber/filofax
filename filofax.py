@@ -589,25 +589,3 @@ def main():
     return filo
 
 main()
-
-#### create some records
-#from datetime import datetime
-#filo = Filofax()
-#filo.load()
-#filo.add_event(Event(datetime(year = 2015, month = 10, day = 22, hour = 22, minute = 00), 'drink a beer with Fritz'))
-#filo.add_event(Event(datetime(year = 2015, month = 10, day = 22, hour = 12, minute = 00), 'eat lunch with Paul'))
-#filo.add_event(Event(datetime(year = 2015, month = 10, day = 23, hour = 14, minute = 00), 'drink a coffee with Susanne'))
-#filo.save()
-# set selected_date
-#filo.selected_date = datetime(year = 2015, month = 10, day = 22)
-# set format/precision to Year, Month, day, hour, minutes
-#filo.selected_date = datetime_filofax(filo.selected_date)
-
-#set selected_event
-#filo.find_event_by_datetime(filo.selected_date)
-
-#show current event
-#print('\nToday is the ' + str(datetime.today().date()) + '\n' +
-#      'The next upcoming event is : \n')
-
-#filo.show_event()
