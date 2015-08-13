@@ -588,3 +588,5 @@ def main():
 
     filo.save()
     return filo
+
+main()
