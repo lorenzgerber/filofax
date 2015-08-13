@@ -583,9 +583,8 @@ def main():
             filo.save()
             print('\nDatabase saved\n')
 
-        print('\nYou did not enter a valid choice! try again...\n')
+        if menu_select not in ['1','2','3','4','5','6','7','8','9','10','11','99']:
+            print('\nYou did not enter a valid choice! try again...\n')
 
     filo.save()
     return filo
-
-main()
