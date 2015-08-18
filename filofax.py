@@ -371,50 +371,48 @@ class Filofax:
     ################
 
     # choose correct viewer according self.mode
-    def show_current(self):
+    def show_current(self, list_object):
         if self.mode == 0:
-            self.show_event()
+            self.show_event(list_object)
         elif self.mode == 1:
-            self.show_day()
+            self.show_day(list_object)
         elif self.mode == 2:
-            self.show_month()
+            self.show_month(list_object)
 
     # print selected_event to screen
-    def show_event(self):
+    def show_event(self, list_object):
         # output content of selected_event
         try:
             show_item = [x for x in self.event_list if x.unique_id == self.selected_event][0]
-            print("{}| {}| {}| {}".format(str(show_item.date_time.date()).ljust(7),
+            list_object.insert(END, "{0:^15}{1:^15}{2:<30}".format(str(show_item.date_time.date()).ljust(7),
                                           str(show_item.date_time.time()).ljust(5),
-                                          show_item.description.ljust(50),
-                                          str(show_item.unique_id)))
+                                          show_item.description.ljust(50)))
         except IndexError:
             print('\nThere is currently no event selected\n')
 
     # print events from selected_day to screen
-    def show_day(self):
+    def show_day(self, list_object):
         # output content of day_indices
         print('\nSelected day is ' + str(self.selected_date.strftime('%A %d %B %Y')) + '\n')
         for iii in self.selected_day_uuids:
             self.selected_event = [x for x in self.event_list if x.unique_id == iii][0].unique_id
-            self.show_event()
+            self.show_event(list_object)
 
     # print events from month of selected_day to screen
-    def show_month(self):
+    def show_month(self, list_object):
         print('\nSelected month is ' + str(self.selected_date.strftime('%B %Y')) + '\n')
         for iii in self.selected_month_uuids:
             self.selected_event = [x for x in self.event_list if x.unique_id == iii][0].unique_id
-            self.show_event()
+            self.show_event(list_object)
 
     # prints a sorted list of all events
-    def show_all_events(self):
+    def show_all_events(self, list_object):
         self.sort_events()
 
         for item in self.event_list:
-            print("{}| {}| {}| {}".format(str(item.date_time.date()).ljust(7),
-                                          str(item.date_time.time()).ljust(5),
-                                          item.description.ljust(50),
-                                          str(item.unique_id)))
+            list_object.insert(END, "{0:^15}{1:^15}{2:<40}".format(str(item.date_time.date()),
+                                          str(item.date_time.time()),
+                                          item.description))
 
     # additional methods / help methods
     @staticmethod
@@ -500,96 +498,180 @@ class Event:
         return event_summary
 
 
-# main
-def main():
-    from datetime import datetime
 
-    filo = Filofax()
-    filo.load()
+from tkinter import *
+from tkinter import ttk
+from datetime import datetime
 
-    # set selected_date
-    filo.selected_date = datetime.now()
-    # set format/precision to Year, Month, day, hour, minutes
-    filo.selected_date = datetime_filofax(filo.selected_date)
+class Application(Frame):
+    def __init__(self, title, master=None):
+        ttk.Frame.__init__(self, master, padding=" 12 12 12 12")
+        self.grid(column=0, row=0, sticky=(N, W, E, S))
+        self.master.title(title)
+        self.filo = Filofax()
+        self.filo.load()
+        # set selected_date
+        self.filo.selected_date = datetime.now()
+        # set format/precision to Year, Month, day, hour, minutes
+        self.filo.selected_date = datetime_filofax(self.filo.selected_date)
+        # set selected_event
+        self.filo.find_event_by_datetime(self.filo.selected_date)
 
-    # set selected_event
-    filo.find_event_by_datetime(filo.selected_date)
+        self.main_frame()
 
-    # show current event
-    print('\nToday is the ' + str(datetime.today().date()) + '\n' +
-          'The next upcoming event is : \n')
-    filo.show_event()
 
-    # user menu loop
-    menu_select = ''
-    while menu_select != '99':
 
-        filo.menu()
-        menu_select = filo.read_user_selection()
 
-        # event view
-        if menu_select == '1':
-            filo.mode = 0
-            filo.populate_selected_event_date()
-            filo.populate_day_uuids()
-            filo.populate_month_uuids()
 
-        # day view
-        if menu_select == '2':
-            filo.mode = 1
-            filo.populate_selected_event_date()
-            filo.populate_day_uuids()
-            filo.populate_month_uuids()
+    def main_frame(self):
+        self.scrollbar = Scrollbar(self, orient=VERTICAL)
+        self.scrollbar.grid(column=2, sticky=N+S)
+        self.lb_events = Listbox(self, width=80)
+        self.lb_events.config(yscrollcommand=self.scrollbar.set)
+        self.lb_events.grid(column=0, row=0, rowspan=4, columnspan=2, sticky=N+E+S+W)
 
-        # month view
-        if menu_select == '3':
-            filo.mode = 2
-            filo.populate_selected_event_date()
-            filo.populate_day_uuids()
-            filo.populate_month_uuids()
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
 
-        # show previous
-        if menu_select == '4':
-            filo.previous_unit()
-            filo.show_current()
+        self.scrollbar.config(command=self.lb_events.yview)
 
-        # show current
-        if menu_select == '5':
-            filo.show_current()
+        top=self.winfo_toplevel()
+        self.menu_bar = Menu(top)
+        top["menu"] = self.menu_bar
 
-        # show next
-        if menu_select == '6':
-            filo.next_unit()
-            filo.show_current()
+        # create a pulldown menu, and add it to the menu bar
+        self.file_menu = Menu(self.menu_bar, tearoff=0)
+        self.file_menu.add_command(label="Open")
+        self.file_menu.add_command(label="Save")
+        self.file_menu.add_separator()
+        self.file_menu.add_command(label="Exit", command=self.quit)
+        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+
+        # create more pulldown menus
+        self.edit_menu = Menu(self.menu_bar, tearoff=0)
+        self.edit_menu.add_command(label="New Event...")
+        self.edit_menu.add_command(label="Remove Event...")
+        self.menu_bar.add_cascade(label="Edit", menu=self.edit_menu)
+
+        self.mode_menu = Menu(self.menu_bar, tearoff=0)
+        self.mode_menu.add_command(label="...event", command=self.mode_event)
+        self.mode_menu.add_command(label="...day", command=self.mode_day)
+        self.mode_menu.add_command(label="...month", command=self.mode_month)
+        self.menu_bar.add_cascade(label="Display", menu=self.mode_menu)
+
+        self.nav_menu = Menu(self.menu_bar, tearoff=0)
+        self.nav_menu.add_command(label="Next", command=self.show_next)
+        self.nav_menu.add_command(label="Previous", command=self.show_previous)
+        self.nav_menu.add_command(label="Jump to...")
+        self.menu_bar.add_cascade(label="Navigate", menu=self.nav_menu)
+
+        self.opt_menu = Menu(self.menu_bar, tearoff=0)
+        self.opt_menu.add_command(label="Show all events", command=self.show_all)
+        self.menu_bar.add_cascade(label="Options", menu=self.opt_menu)
+
+        self.help_menu = Menu(self.menu_bar, tearoff=0)
+        self.help_menu.add_command(label="About")
+        self.menu_bar.add_cascade(label="Help", menu=self.help_menu)
+
+        filo = Filofax()
+        filo.load()
+        # set selected_date
+        filo.selected_date = datetime.now()
+        # set format/precision to Year, Month, day, hour, minutes
+        filo.selected_date = datetime_filofax(filo.selected_date)
+
+        # set selected_event
+        filo.find_event_by_datetime(filo.selected_date)
+
+        filo.mode = 0
+        filo.populate_selected_event_date()
+        filo.populate_day_uuids()
+        filo.populate_month_uuids()
+
+    def hello():
+        print("hello!")
+
+    def mode_event(self):
+        self.mode = 0
+        self.filo.populate_selected_event_date()
+        self.filo.populate_day_uuids()
+        self.filo.populate_month_uuids()
+
+    def mode_day(self):
+        self.filo.mode = 1
+        self.filo.populate_selected_event_date()
+        self.filo.populate_day_uuids()
+        self.filo.populate_month_uuids()
+
+    def mode_month(self):
+        self.filo.mode = 2
+        self.filo.populate_selected_event_date()
+        self.filo.populate_day_uuids()
+        self.filo.populate_month_uuids()
+
+    def show_previous(self):
+        self.lb_events.delete(0,END)
+        self.filo.previous_unit()
+        self.filo.show_current(self.lb_events)
+
+    def show_current(self):
+        self.lb_events.delete(0,END)
+        self.filo.show_current(self.lb_events)
+
+    def show_next(self):
+        self.lb_events.delete(0,END)
+        self.filo.next_unit()
+        self.filo.show_current(self.lb_events)
+
+    def show_all(self):
+        self.filo.show_all_events(self.lb_events)
+
+
+
+
+
+app = Application('Filofax')
+app.mainloop()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         # add event
-        if menu_select == '7':
-            filo.add_event(Event.user_input())
+        #if menu_select == '7':
+        #    filo.add_event(Event.user_input())
 
         # remove event
-        if menu_select == '8':
-            filo.remove_event_interface()
+        #if menu_select == '8':
+        #    filo.remove_event_interface()
 
         # jump to day/month
-        if menu_select == '9':
-            filo.jump_to_date()
+        #if menu_select == '9':
+        #    filo.jump_to_date()
 
         # show all events
-        if menu_select == '10':
-            filo.show_all_events()
+        #if menu_select == '10':
+        #    filo.show_all_events()
 
-        # save date
-        if menu_select == '11':
-            filo.save()
-            print('\nDatabase saved\n')
 
-        if menu_select not in ['1','2','3','4','5','6','7','8','9','10','11','99']:
-            print('\nYou did not enter a valid choice! try again...\n')
 
-    filo.save()
-    return filo
-
-main()
 
 #### create some records
 #from datetime import datetime
@@ -601,7 +683,7 @@ main()
 #filo.save()
 # set selected_date
 #filo.selected_date = datetime(year = 2015, month = 10, day = 22)
-# set format/precision to Year, Month, day, hour, minutes
+#set format/precision to Year, Month, day, hour, minutes
 #filo.selected_date = datetime_filofax(filo.selected_date)
 
 #set selected_event
