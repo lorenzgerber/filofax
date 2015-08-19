@@ -503,9 +503,10 @@ from tkinter import *
 from tkinter import ttk
 from datetime import datetime
 
+# main tkinter GUI class
 class Application(Frame):
     def __init__(self, title, master=None):
-        ttk.Frame.__init__(self, master, padding=" 12 12 12 12")
+        ttk.Frame.__init__(self, master, padding=" 3 3 3 3", relief='sunken')
         self.grid(column=0, row=0, sticky=(N, W, E, S))
         self.master.title(title)
         self.filo = Filofax()
@@ -518,26 +519,41 @@ class Application(Frame):
         self.filo.find_event_by_datetime(self.filo.selected_date)
 
         self.main_frame()
+        self.show_current()
+        self.display_date.set('the next event:')
 
 
 
 
 
     def main_frame(self):
+        # listbox with scrollbar
         self.scrollbar = Scrollbar(self, orient=VERTICAL)
-        self.scrollbar.grid(column=2, sticky=N+S)
+        self.scrollbar.grid(row=1,column=3, sticky=N+S)
         self.lb_events = Listbox(self, width=80)
         self.lb_events.config(yscrollcommand=self.scrollbar.set)
-        self.lb_events.grid(column=0, row=0, rowspan=4, columnspan=2, sticky=N+E+S+W)
-
+        self.lb_events.grid(column=0, row=1, rowspan=1, columnspan=3, sticky=N+E+S+W)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-
         self.scrollbar.config(command=self.lb_events.yview)
 
-        top=self.winfo_toplevel()
-        self.menu_bar = Menu(top)
-        top["menu"] = self.menu_bar
+        self.display_date = StringVar()
+        self.date_label = ttk.Label(self, textvariable=self.display_date, width=80)
+        self.date_label.grid(column=1, row=0)
+
+        # Next / Previous buttons
+        self.next_button = ttk.Button(self, text='next', width=7, command=self.show_next)
+        self.previous_button = ttk.Button(self, text='previous', width=7, command=self.show_previous)
+        self.previous_button.grid(column=0,row=4, sticky=W)
+        self.next_button.grid(column=1, row=4, sticky=W)
+
+
+
+        # menu system
+        # getting the toplevel window
+        self.top=self.winfo_toplevel()
+        self.menu_bar = Menu(self.top)
+        self.top["menu"] = self.menu_bar
 
         # create a pulldown menu, and add it to the menu bar
         self.file_menu = Menu(self.menu_bar, tearoff=0)
@@ -562,7 +578,7 @@ class Application(Frame):
         self.nav_menu = Menu(self.menu_bar, tearoff=0)
         self.nav_menu.add_command(label="Next", command=self.show_next)
         self.nav_menu.add_command(label="Previous", command=self.show_previous)
-        self.nav_menu.add_command(label="Jump to...")
+        self.nav_menu.add_command(label="Jump to...", command=self.call_jump_to)
         self.menu_bar.add_cascade(label="Navigate", menu=self.nav_menu)
 
         self.opt_menu = Menu(self.menu_bar, tearoff=0)
@@ -573,58 +589,105 @@ class Application(Frame):
         self.help_menu.add_command(label="About")
         self.menu_bar.add_cascade(label="Help", menu=self.help_menu)
 
-        filo = Filofax()
-        filo.load()
-        # set selected_date
-        filo.selected_date = datetime.now()
-        # set format/precision to Year, Month, day, hour, minutes
-        filo.selected_date = datetime_filofax(filo.selected_date)
-
-        # set selected_event
-        filo.find_event_by_datetime(filo.selected_date)
-
-        filo.mode = 0
-        filo.populate_selected_event_date()
-        filo.populate_day_uuids()
-        filo.populate_month_uuids()
 
     def hello():
         print("hello!")
 
+    def call_jump_to(self):
+        self.jumper = jump_to_window(mode=self.filo.mode)
+        self.wait_window(self.jumper.top)
+
+
+
     def mode_event(self):
-        self.mode = 0
+        self.filo.mode = 0
         self.filo.populate_selected_event_date()
         self.filo.populate_day_uuids()
         self.filo.populate_month_uuids()
+        self.display_date.set('selected event')
 
     def mode_day(self):
         self.filo.mode = 1
         self.filo.populate_selected_event_date()
         self.filo.populate_day_uuids()
         self.filo.populate_month_uuids()
+        self.display_date.set(str(self.filo.selected_date.strftime('%A %d %B %Y')))
 
     def mode_month(self):
         self.filo.mode = 2
         self.filo.populate_selected_event_date()
         self.filo.populate_day_uuids()
         self.filo.populate_month_uuids()
+        self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
 
     def show_previous(self):
         self.lb_events.delete(0,END)
         self.filo.previous_unit()
         self.filo.show_current(self.lb_events)
+        if self.filo.mode==0:
+            self.display_date.set('selected event')
+        elif self.filo.mode==1:
+            self.display_date.set(str(self.filo.selected_date.strftime('%A %d %B %Y')))
+        elif self.filo.mode==2:
+            self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
+
 
     def show_current(self):
         self.lb_events.delete(0,END)
         self.filo.show_current(self.lb_events)
+        if self.filo.mode==0:
+            self.display_date.set('selected event')
+        elif self.filo.mode==1:
+            self.display_date.set(str(self.filo.selected_date.strftime('%A %d %B %Y')))
+        elif self.filo.mode==2:
+            self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
 
     def show_next(self):
         self.lb_events.delete(0,END)
         self.filo.next_unit()
         self.filo.show_current(self.lb_events)
+        if self.filo.mode==0:
+            self.display_date.set('selected event')
+        elif self.filo.mode==1:
+            self.display_date.set(str(self.filo.selected_date.strftime('%A %d %B %Y')))
+        elif self.filo.mode==2:
+            self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
 
     def show_all(self):
         self.filo.show_all_events(self.lb_events)
+        self.display_date.set('all events in the database')
+
+# popup window for 'jump to'
+class jump_to_window(Frame):
+    def __init__(self, master=None, mode=0):
+        ttk.Frame.__init__(self, master)
+        self.grid()
+        top = self.top = Toplevel(self)
+        if mode==0:
+            self.label = Label(top, text='Please change to day or month mode')
+            self.label.grid(row=0, column=0)
+            self.button = Button(top, text='OK', command=self.top.destroy)
+            self.button.grid(row=1)
+        if mode==1:
+            self.label = Label(top, text='Please enter day YYMMDD')
+            self.label.grid(row=0, column=0)
+            self.entry = Entry(top)
+            self.entry.grid(row=1)
+            self.button = Button(top, text='OK', command=self.top.destroy)
+            self.button.grid(row=2)
+        if mode==2:
+            self.label = Label(top, text='Please enter month YYMM')
+            self.label.grid(row=0, column=0)
+            self.entry = Entry(top)
+            self.entry.grid(row=1)
+            self.button = Button(top, text='OK', command=self.top.destroy)
+            self.button.grid(row=2)
+
+
+
+
+
+
 
 
 
@@ -632,66 +695,3 @@ class Application(Frame):
 
 app = Application('Filofax')
 app.mainloop()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # add event
-        #if menu_select == '7':
-        #    filo.add_event(Event.user_input())
-
-        # remove event
-        #if menu_select == '8':
-        #    filo.remove_event_interface()
-
-        # jump to day/month
-        #if menu_select == '9':
-        #    filo.jump_to_date()
-
-        # show all events
-        #if menu_select == '10':
-        #    filo.show_all_events()
-
-
-
-
-#### create some records
-#from datetime import datetime
-#filo = Filofax()
-#filo.load()
-#filo.add_event(Event(datetime(year = 2015, month = 10, day = 22, hour = 22, minute = 00), 'drink a beer with Fritz'))
-#filo.add_event(Event(datetime(year = 2015, month = 10, day = 22, hour = 12, minute = 00), 'eat lunch with Paul'))
-#filo.add_event(Event(datetime(year = 2015, month = 10, day = 23, hour = 14, minute = 00), 'drink a coffee with Susanne'))
-#filo.save()
-# set selected_date
-#filo.selected_date = datetime(year = 2015, month = 10, day = 22)
-#set format/precision to Year, Month, day, hour, minutes
-#filo.selected_date = datetime_filofax(filo.selected_date)
-
-#set selected_event
-#filo.find_event_by_datetime(filo.selected_date)
-
-#show current event
-#print('\nToday is the ' + str(datetime.today().date()) + '\n' +
-#      'The next upcoming event is : \n')
-
-#filo.show_event()
-
