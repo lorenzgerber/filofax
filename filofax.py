@@ -244,14 +244,14 @@ class Filofax:
         self.populate_month_uuids()
 
     # Jumps to date 'date_time' or date of next event after 'date_time'
-    def jump_to_date(self):
+    def jump_to_date(self, date_input):
         from datetime import datetime
         # find event_id and of next event equal or bigger than
         # date_time and set selected_event to it
         if self.mode == 1:
-            self.selected_date = datetime.strptime(str(input('Please enter date (yymmdd):')), "%y%m%d")
+            self.selected_date = datetime.strptime(date_input, "%y%m%d")
         elif self.mode == 2:
-            self.selected_date = datetime.strptime(str(input('Please enter month (yymm):') +
+            self.selected_date = datetime.strptime(str(date_input +
                                                        str(self.selected_date.day)), "%y%m%d")
         self.populate_day_uuids()
         self.populate_month_uuids()
@@ -565,7 +565,7 @@ class Application(Frame):
 
         # create more pulldown menus
         self.edit_menu = Menu(self.menu_bar, tearoff=0)
-        self.edit_menu.add_command(label="New Event...")
+        self.edit_menu.add_command(label="New Event...", command=self.call_enter_new_event)
         self.edit_menu.add_command(label="Remove Event...")
         self.menu_bar.add_cascade(label="Edit", menu=self.edit_menu)
 
@@ -596,7 +596,17 @@ class Application(Frame):
     def call_jump_to(self):
         jumper = jump_to_window(mode=self.filo.mode)
         self.wait_window(jumper.top)
+        self.filo.jump_to_date(jumper.data)
+        self.show_current()
 
+    def call_enter_new_event(self):
+        new_event = enter_new_event()
+        self.wait_window(new_event.top)
+        if new_event.entry_date is not False:
+            assemble_date = self.filo.string_date_time_convert(new_event.date_data, new_event.time_data)
+            assemble_date = datetime_filofax(assemble_date)
+            self.filo.add_event(Event(assemble_date, new_event.event_data))
+            print('event added')
 
 
 
@@ -668,14 +678,14 @@ class jump_to_window(Frame):
         if mode==0:
             self.label = Label(top, text='Please change to day or month mode')
             self.label.grid(row=0, column=0)
-            self.button = Button(top, text='OK', command=self.top.destroy)
+            self.button = Button(top, text='OK', command=self.on_button)
             self.button.grid(row=1)
         if mode==1:
             self.label = Label(top, text='Please enter day YYMMDD')
             self.label.grid(row=0, column=0)
             self.entry = Entry(top)
             self.entry.grid(row=1)
-            self.button = Button(top, text='OK', command=self.top.destroy)
+            self.button = Button(top, text='OK', command=self.on_button)
             self.button.grid(row=2)
 
         if mode==2:
@@ -683,9 +693,40 @@ class jump_to_window(Frame):
             self.label.grid(row=0, column=0)
             self.entry = Entry(top)
             self.entry.grid(row=1)
-            self.button = Button(top, text='OK', command=self.top.destroy)
+            self.button = Button(top, text='OK', command=self.on_button)
             self.button.grid(row=2)
-            
+
+    def on_button(self):
+        self.data = self.entry.get()
+        self.top.destroy()
+
+class enter_new_event(Frame):
+    def __init__(self, master=None):
+        ttk.Frame.__init__(self, master)
+        self.grid()
+        top = self.top = Toplevel(self)
+        self.label_main = Label(top, text='please enter a new event').grid(column=0, row=0)
+        self.label_event = Label(top, text='Event').grid(column=0, row=1)
+        self.label_time = Label(top, text='Time (hhmm)').grid(column=0, row=2)
+        self.label_date = Label(top, text='Date (yymmdd)').grid(column=0, row=3)
+        self.entry_event = Entry(top)
+        self.entry_event.grid(column=2, row=1)
+        self.entry_time = Entry(top)
+        self.entry_time.grid(column=2, row=2)
+        self.entry_date = Entry(top)
+        self.entry_date.grid(column=2, row=3)
+        self.button_ok = ttk.Button(top, text='OK', command=self.on_ok_button).grid(column=1, row=4)
+        self.button_cancel = ttk.Button(top, text='Cancel', command=self.on_cancel_button).grid(column=2, row=4)
+    def on_cancel_button(self):
+        self.date = False
+        self.top.destroy()
+    def on_ok_button(self):
+        self.event_data = self.entry_event.get()
+        self.time_data = self.entry_time.get()
+        self.date_data = self.entry_date.get()
+        self.top.destroy()
+
+
 
 
 

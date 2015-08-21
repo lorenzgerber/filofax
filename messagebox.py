@@ -13,6 +13,7 @@ class Application(Frame):
     def call_test_press(self):
         jumper = jump_to_window()
         self.wait_window(jumper.top)
+        print(jumper.data)
 
 
 
@@ -27,9 +28,12 @@ class jump_to_window(Frame):
         self.entry.grid(row=1)
         self.data = 'test'
         self.data = self.entry.get()
-        print(self.data)
-        self.button = Button(top, text='OK', command=self.top.destroy)
+        self.button = Button(top, text='OK', command=self.on_button)
         self.button.grid(row=2)
+
+    def on_button(self):
+        self.data = self.entry.get()
+        self.top.destroy()
 
 
 app = Application('test')
