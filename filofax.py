@@ -594,8 +594,10 @@ class Application(Frame):
         print("hello!")
 
     def call_jump_to(self):
-        self.jumper = jump_to_window(mode=self.filo.mode)
-        self.wait_window(self.jumper.top)
+        jumper = jump_to_window(mode=self.filo.mode)
+        self.wait_window(jumper.top)
+
+
 
 
 
@@ -675,6 +677,7 @@ class jump_to_window(Frame):
             self.entry.grid(row=1)
             self.button = Button(top, text='OK', command=self.top.destroy)
             self.button.grid(row=2)
+
         if mode==2:
             self.label = Label(top, text='Please enter month YYMM')
             self.label.grid(row=0, column=0)
@@ -682,14 +685,7 @@ class jump_to_window(Frame):
             self.entry.grid(row=1)
             self.button = Button(top, text='OK', command=self.top.destroy)
             self.button.grid(row=2)
-
-
-
-
-
-
-
-
+            
 
 
 
