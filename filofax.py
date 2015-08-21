@@ -13,10 +13,10 @@
 
 class Filofax:
     """ This class will be a data container for all
-    Event class objects.
+    Filo_event class objects.
 
     Attributes:
-        event_list              list        - here all Event
+        event_list              list        - here all Filo_event
                                       class objects are stored
         selected_date           date         - the selected date
         selected_event          uuid         - the ID of the selected event
@@ -193,7 +193,7 @@ class Filofax:
         try:
             day_indices = [x for x, n in enumerate(self.event_list) if n.date_time.date() == self.selected_date.date()]
             event_list_day = [self.event_list[i] for i in day_indices]
-            day_uuids = [Event.unique_id for Event in event_list_day]
+            day_uuids = [Filo_event.unique_id for Filo_event in event_list_day]
         except ValueError:
             day_uuids = []
             print('There are no events in day: ' + str(self.selected_date.date()))
@@ -206,7 +206,7 @@ class Filofax:
                              if n.date_time.month == self.selected_date.month and
                              n.date_time.year == self.selected_date.year)
             event_list_month = [self.event_list[i] for i in month_indices]
-            month_uuids = [Event.unique_id for Event in event_list_month]
+            month_uuids = [Filo_event.unique_id for Filo_event in event_list_month]
         except ValueError:
             month_uuids = []
             print('There are no events in month: ' + str(self.selected_date.year) + ' ' + str(self.selected_date.month))
@@ -460,7 +460,7 @@ def datetime_filofax(datetime_in):
     return datetime_out
 
 
-class Event:
+class Filo_event:
     """This class is the main data container
 
     Attributes:
@@ -489,7 +489,7 @@ class Event:
         cls.date_time = datetime.combine(cls.date, cls.time)
         print(cls.date)
         print(cls.time)
-        return Event(cls.date_time, cls.description)
+        return Filo_event(cls.date_time, cls.description)
 
     def __str__(self):
         event_summary = ('Date: ' + str(self.date_time.date()) + '\n' +
@@ -532,6 +532,7 @@ class Application(Frame):
         self.scrollbar.grid(row=1,column=3, sticky=N+S)
         self.lb_events = Listbox(self, width=80)
         self.lb_events.config(yscrollcommand=self.scrollbar.set)
+        self.lb_events.bind("<<ListboxSelect>>", self.on_listbox_select)
         self.lb_events.grid(column=0, row=1, rowspan=1, columnspan=3, sticky=N+E+S+W)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -585,9 +586,15 @@ class Application(Frame):
         self.opt_menu.add_command(label="Show all events", command=self.show_all)
         self.menu_bar.add_cascade(label="Options", menu=self.opt_menu)
 
-        self.help_menu = Menu(self.menu_bar, tearoff=0)
-        self.help_menu.add_command(label="About")
-        self.menu_bar.add_cascade(label="Help", menu=self.help_menu)
+    # event handler. Need to add code to write the selection in selected_event
+    def on_listbox_select(self, event):
+        widget = event.widget
+        selection=widget.curselection()
+        value = widget.get(selection[0])
+        print(selection[0])
+        print("selection:", selection, ": '%s'" % value)
+
+
 
 
     def hello():
@@ -596,16 +603,21 @@ class Application(Frame):
     def call_jump_to(self):
         jumper = jump_to_window(mode=self.filo.mode)
         self.wait_window(jumper.top)
-        self.filo.jump_to_date(jumper.data)
-        self.show_current()
+        if jumper.data is not False:
+            self.filo.jump_to_date(jumper.data)
+            self.show_current()
 
     def call_enter_new_event(self):
         new_event = enter_new_event()
         self.wait_window(new_event.top)
         if new_event.entry_date is not False:
+            from datetime import datetime
             assemble_date = self.filo.string_date_time_convert(new_event.date_data, new_event.time_data)
             assemble_date = datetime_filofax(assemble_date)
-            self.filo.add_event(Event(assemble_date, new_event.event_data))
+            self.filo.add_event(Filo_event(assemble_date,new_event.event_data))
+            self.mode_day()
+            self.filo.jump_to_date(assemble_date.strftime("%y%m%d"))
+            self.show_current()
             print('event added')
 
 
@@ -678,7 +690,8 @@ class jump_to_window(Frame):
         if mode==0:
             self.label = Label(top, text='Please change to day or month mode')
             self.label.grid(row=0, column=0)
-            self.button = Button(top, text='OK', command=self.on_button)
+            self.data = False
+            self.button = Button(top, text='OK', command=self.top.destroy)
             self.button.grid(row=1)
         if mode==1:
             self.label = Label(top, text='Please enter day YYMMDD')
