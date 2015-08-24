@@ -532,7 +532,7 @@ class Application(Frame):
         self.scrollbar.grid(row=1,column=3, sticky=N+S)
         self.lb_events = Listbox(self, width=80)
         self.lb_events.config(yscrollcommand=self.scrollbar.set)
-        self.lb_events.bind("<<ListboxSelect>>", self.on_listbox_select)
+        #self.lb_events.bind("<<ListboxSelect>>", self.on_listbox_select)
         self.lb_events.grid(column=0, row=1, rowspan=1, columnspan=3, sticky=N+E+S+W)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -567,7 +567,7 @@ class Application(Frame):
         # create more pulldown menus
         self.edit_menu = Menu(self.menu_bar, tearoff=0)
         self.edit_menu.add_command(label="New Event...", command=self.call_enter_new_event)
-        self.edit_menu.add_command(label="Remove Event...")
+        self.edit_menu.add_command(label="Remove Event...", command=self.current_lb_selection)
         self.menu_bar.add_cascade(label="Edit", menu=self.edit_menu)
 
         self.mode_menu = Menu(self.menu_bar, tearoff=0)
@@ -587,12 +587,40 @@ class Application(Frame):
         self.menu_bar.add_cascade(label="Options", menu=self.opt_menu)
 
     # event handler. Need to add code to write the selection in selected_event
-    def on_listbox_select(self, event):
-        widget = event.widget
-        selection=widget.curselection()
-        value = widget.get(selection[0])
-        print(selection[0])
-        print("selection:", selection, ": '%s'" % value)
+    #def on_listbox_select(self, event):
+    #    widget = event.widget
+    #    self.lb_events.selected = widget.curselection()
+        #value = widget.get(selection[0])
+        #print(selection[0])
+        #print("selection:", selection, ": '%s'" % value)
+
+    def current_lb_selection(self):
+        from tkinter import messagebox
+        print(len(self.lb_events.curselection()))
+        item = list(map(int, self.lb_events.curselection()))
+        print(len(item))
+
+        print('filo.mode = ' + str(self.filo.mode))
+        if self.filo.mode == 0:
+            print('remove current event')
+            show_item = [x for x in self.filo.event_list if x.unique_id == self.filo.selected_event][0]
+            if messagebox.askokcancel("Remove Events", "Shall the event:\n" + str(show_item.date_time) +
+                                      " " + show_item.description + "\nbe removed?"):
+                self.filo.remove_event(self.filo.selected_event)
+        elif self.filo.mode == 1:
+            if len(item) > 0:
+                print('day mode: remove current event')
+
+        elif self.filo.mode == 2:
+            if len(item) > 0:
+                    print('month mode: remove current event')
+        else:
+            print('no event removed')
+
+        # check in which mode
+        # if event mode, current event can be removed.
+        # if day mode, choose the uuid from the list according list selector
+        # if month mode, choose the uuid from the list according list selector
 
 
 
@@ -713,6 +741,7 @@ class jump_to_window(Frame):
         self.data = self.entry.get()
         self.top.destroy()
 
+# Pop-up window for entering a new event
 class enter_new_event(Frame):
     def __init__(self, master=None):
         ttk.Frame.__init__(self, master)
@@ -738,6 +767,8 @@ class enter_new_event(Frame):
         self.time_data = self.entry_time.get()
         self.date_data = self.entry_date.get()
         self.top.destroy()
+
+# Popup window to ask if selected event shall be deleted
 
 
 
