@@ -81,41 +81,6 @@ class Filofax:
                 str(self.selected_event) + '\n' + str(self.selected_date) + '\n' +
                 str(self.selected_day_uuids) + '\n' + str(self.selected_month_uuids) + '\n')
 
-    ###################
-    # User Menu related
-    ###################
-
-    # prints out the user menu
-    def menu(self):
-        mode = 'event'
-        if self.mode == 0:
-            mode = 'event'
-        elif self.mode == 1:
-            mode = 'day'
-        elif self.mode == 2:
-            mode = 'month'
-
-        menu_text = ('\n\nYou are in ' + mode + ' view mode \n\n' +
-                     'Main menu Filofax\n' +
-                     '-----------------\n' +
-                     '1. switch to event view \n' +
-                     '2. switch to day view \n' +
-                     '3. switch to month view \n' +
-                     '4. show previous \n' +
-                     '5. show current \n' +
-                     '6. show next \n' +
-                     '7. enter new event \n' +
-                     '8. remove event \n' +
-                     '9. jump to day/month \n' +
-                     '10. show all events \n' +
-                     '11. save data \n' +
-                     '99. save and exit \n')
-        print(menu_text)
-
-    @staticmethod
-    def read_user_selection():
-        return input('make your choice \n')
-
     #####################
     # add / remove events
     #####################
@@ -310,12 +275,14 @@ class Filofax:
 
     # next event
     def next_event(self):
+        from tkinter import messagebox
         # look up selected_event and advance by one in time
         self.sort_events()
         if not self.last_event():
             self.selected_event = self.event_list[self.selected_event_index() + 1].unique_id
         else:
             print('Current event is the last')
+            messagebox.showinfo('last', 'current event is the last')
         # call update_chain
         self.update_chain_event()
 
@@ -343,6 +310,7 @@ class Filofax:
 
     # previous event
     def previous_event(self):
+        from tkinter import messagebox
         # check if there is event before selected_event
         # set selected_event to one before in time to current selected_event
         self.sort_events()
@@ -350,6 +318,7 @@ class Filofax:
             self.selected_event = self.event_list[self.selected_event_index() - 1].unique_id
         else:
             print('Current event is the first')
+            messagebox.showinfo('First', 'Current event is the first')
         # call update_chain
         self.update_chain_event()
 
@@ -580,14 +549,6 @@ class Application(Frame):
         self.opt_menu.add_command(label="Show all events", command=self.show_all)
         self.menu_bar.add_cascade(label="Options", menu=self.opt_menu)
 
-        # event handler. Need to add code to write the selection in selected_event
-        # def on_listbox_select(self, event):
-        #    widget = event.widget
-        #    self.lb_events.selected = widget.curselection()
-        # value = widget.get(selection[0])
-        # print(selection[0])
-        # print("selection:", selection, ": '%s'" % value)
-
     def current_lb_selection(self):
         from tkinter import messagebox
         # store the current selection of self.lb_events in a variable
@@ -634,11 +595,6 @@ class Application(Frame):
                 messagebox.showinfo('no event selected', 'you need to select an event first')
         else:
             print('no event removed')
-
-            # check in which mode
-            # if event mode, current event can be removed.
-            # if day mode, choose the uuid from the list according list selector
-            # if month mode, choose the uuid from the list according list selector
 
     def call_jump_to(self):
         jumper = JumpToWindow(mode=self.filo.mode)
