@@ -13,10 +13,10 @@
 
 class Filofax:
     """ This class will be a data container for all
-    Filo_event class objects.
+    FiloEvent class objects.
 
     Attributes:
-        event_list              list        - here all Filo_event
+        event_list              list        - here all FiloEvent
                                       class objects are stored
         selected_date           date         - the selected date
         selected_event          uuid         - the ID of the selected event
@@ -125,16 +125,16 @@ class Filofax:
         self.event_list.append(event)
 
     # remove event user interaction
-    def remove_event_interface(self):
-        print('current event is: \n')
+    # def remove_event_interface(self):
+    #    print('current event is: \n')
 
-        self.show_event()
-        remove_yes_no = input('\nDo you want to remove this event? (yes/no)\n')
-        if remove_yes_no == 'yes':
-            self.remove_event(self.selected_event)
-            print('Event removed')
-            # reset selected event
-            self.find_event_by_datetime(self.selected_date)
+    #    self.show_event()
+    #    remove_yes_no = input('\nDo you want to remove this event? (yes/no)\n')
+    #    if remove_yes_no == 'yes':
+    #        self.remove_event(self.selected_event)
+    #        print('Event removed')
+    #        # reset selected event
+    #        self.find_event_by_datetime(self.selected_date)
 
     # removes an event
     def remove_event(self, event):
@@ -193,7 +193,7 @@ class Filofax:
         try:
             day_indices = [x for x, n in enumerate(self.event_list) if n.date_time.date() == self.selected_date.date()]
             event_list_day = [self.event_list[i] for i in day_indices]
-            day_uuids = [Filo_event.unique_id for Filo_event in event_list_day]
+            day_uuids = [FiloEvent.unique_id for FiloEvent in event_list_day]
         except ValueError:
             day_uuids = []
             print('There are no events in day: ' + str(self.selected_date.date()))
@@ -206,7 +206,7 @@ class Filofax:
                              if n.date_time.month == self.selected_date.month and
                              n.date_time.year == self.selected_date.year)
             event_list_month = [self.event_list[i] for i in month_indices]
-            month_uuids = [Filo_event.unique_id for Filo_event in event_list_month]
+            month_uuids = [FiloEvent.unique_id for FiloEvent in event_list_month]
         except ValueError:
             month_uuids = []
             print('There are no events in month: ' + str(self.selected_date.year) + ' ' + str(self.selected_date.month))
@@ -277,14 +277,14 @@ class Filofax:
     # is last event
     def last_event(self):
         self.sort_events()
-        if len(self.event_list) == (self.selected_event_index()+1):
+        if len(self.event_list) == (self.selected_event_index() + 1):
             return True
         return False
 
     # is first event
     def first_event(self):
         self.sort_events()
-        if (self.selected_event_index()+1) == 1:
+        if (self.selected_event_index() + 1) == 1:
             return True
         return False
 
@@ -313,7 +313,7 @@ class Filofax:
         # look up selected_event and advance by one in time
         self.sort_events()
         if not self.last_event():
-            self.selected_event = self.event_list[self.selected_event_index()+1].unique_id
+            self.selected_event = self.event_list[self.selected_event_index() + 1].unique_id
         else:
             print('Current event is the last')
         # call update_chain
@@ -347,7 +347,7 @@ class Filofax:
         # set selected_event to one before in time to current selected_event
         self.sort_events()
         if not self.first_event():
-            self.selected_event = self.event_list[self.selected_event_index()-1].unique_id
+            self.selected_event = self.event_list[self.selected_event_index() - 1].unique_id
         else:
             print('Current event is the first')
         # call update_chain
@@ -385,8 +385,8 @@ class Filofax:
         try:
             show_item = [x for x in self.event_list if x.unique_id == self.selected_event][0]
             list_object.insert(END, "{0:^15}{1:^15}{2:<30}".format(str(show_item.date_time.date()).ljust(7),
-                                          str(show_item.date_time.time()).ljust(5),
-                                          show_item.description.ljust(50)))
+                                                                   str(show_item.date_time.time()).ljust(5),
+                                                                   show_item.description.ljust(50)))
         except IndexError:
             print('\nThere is currently no event selected\n')
 
@@ -411,8 +411,8 @@ class Filofax:
 
         for item in self.event_list:
             list_object.insert(END, "{0:^15}{1:^15}{2:<40}".format(str(item.date_time.date()),
-                                          str(item.date_time.time()),
-                                          item.description))
+                                                                   str(item.date_time.time()),
+                                                                   item.description))
 
     # additional methods / help methods
     @staticmethod
@@ -460,7 +460,7 @@ def datetime_filofax(datetime_in):
     return datetime_out
 
 
-class Filo_event:
+class FiloEvent:
     """This class is the main data container
 
     Attributes:
@@ -489,7 +489,7 @@ class Filo_event:
         cls.date_time = datetime.combine(cls.date, cls.time)
         print(cls.date)
         print(cls.time)
-        return Filo_event(cls.date_time, cls.description)
+        return FiloEvent(cls.date_time, cls.description)
 
     def __str__(self):
         event_summary = ('Date: ' + str(self.date_time.date()) + '\n' +
@@ -498,10 +498,10 @@ class Filo_event:
         return event_summary
 
 
-
 from tkinter import *
 from tkinter import ttk
 from datetime import datetime
+
 
 # main tkinter GUI class
 class Application(Frame):
@@ -522,18 +522,13 @@ class Application(Frame):
         self.show_current()
         self.display_date.set('the next event:')
 
-
-
-
-
     def main_frame(self):
         # listbox with scrollbar
         self.scrollbar = Scrollbar(self, orient=VERTICAL)
-        self.scrollbar.grid(row=1,column=3, sticky=N+S)
+        self.scrollbar.grid(row=1, column=3, sticky=N + S)
         self.lb_events = Listbox(self, width=80)
         self.lb_events.config(yscrollcommand=self.scrollbar.set)
-        #self.lb_events.bind("<<ListboxSelect>>", self.on_listbox_select)
-        self.lb_events.grid(column=0, row=1, rowspan=1, columnspan=3, sticky=N+E+S+W)
+        self.lb_events.grid(column=0, row=1, rowspan=1, columnspan=3, sticky=N + E + S + W)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.scrollbar.config(command=self.lb_events.yview)
@@ -545,14 +540,12 @@ class Application(Frame):
         # Next / Previous buttons
         self.next_button = ttk.Button(self, text='next', width=7, command=self.show_next)
         self.previous_button = ttk.Button(self, text='previous', width=7, command=self.show_previous)
-        self.previous_button.grid(column=0,row=4, sticky=W)
+        self.previous_button.grid(column=0, row=4, sticky=W)
         self.next_button.grid(column=1, row=4, sticky=W)
-
-
 
         # menu system
         # getting the toplevel window
-        self.top=self.winfo_toplevel()
+        self.top = self.winfo_toplevel()
         self.menu_bar = Menu(self.top)
         self.top["menu"] = self.menu_bar
 
@@ -586,70 +579,65 @@ class Application(Frame):
         self.opt_menu.add_command(label="Show all events", command=self.show_all)
         self.menu_bar.add_cascade(label="Options", menu=self.opt_menu)
 
-    # event handler. Need to add code to write the selection in selected_event
-    #def on_listbox_select(self, event):
-    #    widget = event.widget
-    #    self.lb_events.selected = widget.curselection()
-        #value = widget.get(selection[0])
-        #print(selection[0])
-        #print("selection:", selection, ": '%s'" % value)
+        # event handler. Need to add code to write the selection in selected_event
+        # def on_listbox_select(self, event):
+        #    widget = event.widget
+        #    self.lb_events.selected = widget.curselection()
+        # value = widget.get(selection[0])
+        # print(selection[0])
+        # print("selection:", selection, ": '%s'" % value)
 
     def current_lb_selection(self):
         from tkinter import messagebox
-        print(len(self.lb_events.curselection()))
+        # store the current selection of self.lb_events in a variable
         item = list(map(int, self.lb_events.curselection()))
-        print(len(item))
 
-        print('filo.mode = ' + str(self.filo.mode))
+        # if elif construct for different modes
+        # mode 0 is event mode
         if self.filo.mode == 0:
-            print('remove current event')
+            # get unique_id of current event. There is always a current event.
             show_item = [x for x in self.filo.event_list if x.unique_id == self.filo.selected_event][0]
+            # messagebox, ask if the respective event shall be deleted
             if messagebox.askokcancel("Remove Events", "Shall the event:\n" + str(show_item.date_time) +
                                       " " + show_item.description + "\nbe removed?"):
                 self.filo.remove_event(self.filo.selected_event)
+        # day mode
         elif self.filo.mode == 1:
             if len(item) > 0:
                 print('day mode: remove current event')
 
+
+        # month mode
         elif self.filo.mode == 2:
             if len(item) > 0:
-                    print('month mode: remove current event')
+                print('month mode: remove current event')
         else:
             print('no event removed')
 
-        # check in which mode
-        # if event mode, current event can be removed.
-        # if day mode, choose the uuid from the list according list selector
-        # if month mode, choose the uuid from the list according list selector
-
-
-
-
-    def hello():
-        print("hello!")
+            # check in which mode
+            # if event mode, current event can be removed.
+            # if day mode, choose the uuid from the list according list selector
+            # if month mode, choose the uuid from the list according list selector
 
     def call_jump_to(self):
-        jumper = jump_to_window(mode=self.filo.mode)
+        jumper = JumpToWindow(mode=self.filo.mode)
         self.wait_window(jumper.top)
         if jumper.data is not False:
             self.filo.jump_to_date(jumper.data)
             self.show_current()
 
     def call_enter_new_event(self):
-        new_event = enter_new_event()
+        new_event = EnterNewEvent()
         self.wait_window(new_event.top)
         if new_event.entry_date is not False:
             from datetime import datetime
             assemble_date = self.filo.string_date_time_convert(new_event.date_data, new_event.time_data)
             assemble_date = datetime_filofax(assemble_date)
-            self.filo.add_event(Filo_event(assemble_date,new_event.event_data))
+            self.filo.add_event(FiloEvent(assemble_date, new_event.event_data))
             self.mode_day()
             self.filo.jump_to_date(assemble_date.strftime("%y%m%d"))
             self.show_current()
             print('event added')
-
-
-
 
     def mode_event(self):
         self.filo.mode = 0
@@ -673,55 +661,55 @@ class Application(Frame):
         self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
 
     def show_previous(self):
-        self.lb_events.delete(0,END)
+        self.lb_events.delete(0, END)
         self.filo.previous_unit()
         self.filo.show_current(self.lb_events)
-        if self.filo.mode==0:
+        if self.filo.mode == 0:
             self.display_date.set('selected event')
-        elif self.filo.mode==1:
+        elif self.filo.mode == 1:
             self.display_date.set(str(self.filo.selected_date.strftime('%A %d %B %Y')))
-        elif self.filo.mode==2:
+        elif self.filo.mode == 2:
             self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
 
-
     def show_current(self):
-        self.lb_events.delete(0,END)
+        self.lb_events.delete(0, END)
         self.filo.show_current(self.lb_events)
-        if self.filo.mode==0:
+        if self.filo.mode == 0:
             self.display_date.set('selected event')
-        elif self.filo.mode==1:
+        elif self.filo.mode == 1:
             self.display_date.set(str(self.filo.selected_date.strftime('%A %d %B %Y')))
-        elif self.filo.mode==2:
+        elif self.filo.mode == 2:
             self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
 
     def show_next(self):
-        self.lb_events.delete(0,END)
+        self.lb_events.delete(0, END)
         self.filo.next_unit()
         self.filo.show_current(self.lb_events)
-        if self.filo.mode==0:
+        if self.filo.mode == 0:
             self.display_date.set('selected event')
-        elif self.filo.mode==1:
+        elif self.filo.mode == 1:
             self.display_date.set(str(self.filo.selected_date.strftime('%A %d %B %Y')))
-        elif self.filo.mode==2:
+        elif self.filo.mode == 2:
             self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
 
     def show_all(self):
         self.filo.show_all_events(self.lb_events)
         self.display_date.set('all events in the database')
 
+
 # popup window for 'jump to'
-class jump_to_window(Frame):
+class JumpToWindow(Frame):
     def __init__(self, master=None, mode=0):
         ttk.Frame.__init__(self, master)
         self.grid()
         top = self.top = Toplevel(self)
-        if mode==0:
+        if mode == 0:
             self.label = Label(top, text='Please change to day or month mode')
             self.label.grid(row=0, column=0)
             self.data = False
             self.button = Button(top, text='OK', command=self.top.destroy)
             self.button.grid(row=1)
-        if mode==1:
+        if mode == 1:
             self.label = Label(top, text='Please enter day YYMMDD')
             self.label.grid(row=0, column=0)
             self.entry = Entry(top)
@@ -729,7 +717,7 @@ class jump_to_window(Frame):
             self.button = Button(top, text='OK', command=self.on_button)
             self.button.grid(row=2)
 
-        if mode==2:
+        if mode == 2:
             self.label = Label(top, text='Please enter month YYMM')
             self.label.grid(row=0, column=0)
             self.entry = Entry(top)
@@ -741,8 +729,9 @@ class jump_to_window(Frame):
         self.data = self.entry.get()
         self.top.destroy()
 
+
 # Pop-up window for entering a new event
-class enter_new_event(Frame):
+class EnterNewEvent(Frame):
     def __init__(self, master=None):
         ttk.Frame.__init__(self, master)
         self.grid()
@@ -759,20 +748,18 @@ class enter_new_event(Frame):
         self.entry_date.grid(column=2, row=3)
         self.button_ok = ttk.Button(top, text='OK', command=self.on_ok_button).grid(column=1, row=4)
         self.button_cancel = ttk.Button(top, text='Cancel', command=self.on_cancel_button).grid(column=2, row=4)
+
     def on_cancel_button(self):
         self.date = False
         self.top.destroy()
+
     def on_ok_button(self):
         self.event_data = self.entry_event.get()
         self.time_data = self.entry_time.get()
         self.date_data = self.entry_date.get()
         self.top.destroy()
 
+
 # Popup window to ask if selected event shall be deleted
-
-
-
-
-
 app = Application('Filofax')
 app.mainloop()
