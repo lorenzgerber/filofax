@@ -371,46 +371,47 @@ class Filofax:
     ################
 
     # choose correct viewer according self.mode
-    def show_current(self, list_object):
+    # listbox_object is lb_events
+    def show_current(self, listbox_object):
         if self.mode == 0:
-            self.show_event(list_object)
+            self.show_event(listbox_object)
         elif self.mode == 1:
-            self.show_day(list_object)
+            self.show_day(listbox_object)
         elif self.mode == 2:
-            self.show_month(list_object)
+            self.show_month(listbox_object)
 
     # print selected_event to screen
-    def show_event(self, list_object):
+    def show_event(self, listbox_object):
         # output content of selected_event
         try:
             show_item = [x for x in self.event_list if x.unique_id == self.selected_event][0]
-            list_object.insert(END, "{0:^15}{1:^15}{2:<30}".format(str(show_item.date_time.date()).ljust(7),
+            listbox_object.insert(END, "{0:^15}{1:^15}{2:<30}".format(str(show_item.date_time.date()).ljust(7),
                                                                    str(show_item.date_time.time()).ljust(5),
                                                                    show_item.description.ljust(50)))
         except IndexError:
             print('\nThere is currently no event selected\n')
 
     # print events from selected_day to screen
-    def show_day(self, list_object):
+    def show_day(self, listbox_object):
         # output content of day_indices
         print('\nSelected day is ' + str(self.selected_date.strftime('%A %d %B %Y')) + '\n')
         for iii in self.selected_day_uuids:
             self.selected_event = [x for x in self.event_list if x.unique_id == iii][0].unique_id
-            self.show_event(list_object)
+            self.show_event(listbox_object)
 
     # print events from month of selected_day to screen
-    def show_month(self, list_object):
+    def show_month(self, listbox_object):
         print('\nSelected month is ' + str(self.selected_date.strftime('%B %Y')) + '\n')
         for iii in self.selected_month_uuids:
             self.selected_event = [x for x in self.event_list if x.unique_id == iii][0].unique_id
-            self.show_event(list_object)
+            self.show_event(listbox_object)
 
     # prints a sorted list of all events
-    def show_all_events(self, list_object):
+    def show_all_events(self, listbox_object):
         self.sort_events()
 
         for item in self.event_list:
-            list_object.insert(END, "{0:^15}{1:^15}{2:<40}".format(str(item.date_time.date()),
+            listbox_object.insert(END, "{0:^15}{1:^15}{2:<40}".format(str(item.date_time.date()),
                                                                    str(item.date_time.time()),
                                                                    item.description))
 
@@ -551,8 +552,8 @@ class Application(Frame):
 
         # create a pulldown menu, and add it to the menu bar
         self.file_menu = Menu(self.menu_bar, tearoff=0)
-        self.file_menu.add_command(label="Open")
-        self.file_menu.add_command(label="Save")
+        self.file_menu.add_command(label="Open", command=self.filo.load)
+        self.file_menu.add_command(label="Save", command=self.filo.save)
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Exit", command=self.quit)
         self.menu_bar.add_cascade(label="File", menu=self.file_menu)
@@ -645,6 +646,7 @@ class Application(Frame):
         self.filo.populate_day_uuids()
         self.filo.populate_month_uuids()
         self.display_date.set('selected event')
+        self.show_current()
 
     def mode_day(self):
         self.filo.mode = 1
@@ -652,6 +654,7 @@ class Application(Frame):
         self.filo.populate_day_uuids()
         self.filo.populate_month_uuids()
         self.display_date.set(str(self.filo.selected_date.strftime('%A %d %B %Y')))
+        self.show_current()
 
     def mode_month(self):
         self.filo.mode = 2
@@ -659,6 +662,7 @@ class Application(Frame):
         self.filo.populate_day_uuids()
         self.filo.populate_month_uuids()
         self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
+        self.show_current()
 
     def show_previous(self):
         self.lb_events.delete(0, END)
@@ -695,6 +699,9 @@ class Application(Frame):
     def show_all(self):
         self.filo.show_all_events(self.lb_events)
         self.display_date.set('all events in the database')
+
+    def save_quit(self):
+        
 
 
 # popup window for 'jump to'
