@@ -136,7 +136,7 @@ class Filofax:
     #        # reset selected event
     #        self.find_event_by_datetime(self.selected_date)
 
-    # removes an event
+    # removes an event, event is a uuid
     def remove_event(self, event):
         remove_event_index = self.event_list.index([x for x in self.event_list if x.unique_id == event][0])
         del self.event_list[remove_event_index]
@@ -555,7 +555,7 @@ class Application(Frame):
         self.file_menu.add_command(label="Open", command=self.filo.load)
         self.file_menu.add_command(label="Save", command=self.filo.save)
         self.file_menu.add_separator()
-        self.file_menu.add_command(label="Exit", command=self.quit)
+        self.file_menu.add_command(label="Exit", command=self.save_quit)
         self.menu_bar.add_cascade(label="File", menu=self.file_menu)
 
         # create more pulldown menus
@@ -602,16 +602,36 @@ class Application(Frame):
             if messagebox.askokcancel("Remove Events", "Shall the event:\n" + str(show_item.date_time) +
                                       " " + show_item.description + "\nbe removed?"):
                 self.filo.remove_event(self.filo.selected_event)
+                self.filo.find_event_by_datetime(self.filo.selected_date)
+                self.show_current()
         # day mode
         elif self.filo.mode == 1:
             if len(item) > 0:
                 print('day mode: remove current event')
+                day_uuid = self.filo.selected_day_uuids[item[0]]
+                show_item = [x for x in self.filo.event_list if x.unique_id == day_uuid][0]
+                if messagebox.askokcancel("Remove Events", "Shall the event:\n" + str(show_item.date_time) +
+                                      " " + show_item.description + "\nbe removed?"):
+                    self.filo.remove_event(self.filo.selected_day_uuids[item[0]])
+                    self.filo.populate_day_uuids()
+                    self.show_current()
+            else:
+                messagebox.showinfo('no event selected', 'you need to select an event first')
 
 
         # month mode
         elif self.filo.mode == 2:
             if len(item) > 0:
                 print('month mode: remove current event')
+                month_uuid = self.filo.selected_month_uuids[item[0]]
+                show_item = [x for x in self.filo.event_list if x.unique_id == month_uuid][0]
+                if messagebox.askokcancel("Remove Events", "Shall the event:\n" + str(show_item.date_time) +
+                                      " " + show_item.description + "\nbe removed?"):
+                    self.filo.remove_event(self.filo.selected_month_uuids[item[0]])
+                    self.filo.populate_month_uuids()
+                    self.show_current()
+            else:
+                messagebox.showinfo('no event selected', 'you need to select an event first')
         else:
             print('no event removed')
 
@@ -701,8 +721,8 @@ class Application(Frame):
         self.display_date.set('all events in the database')
 
     def save_quit(self):
-        
-
+        self.filo.save()
+        self.quit()
 
 # popup window for 'jump to'
 class JumpToWindow(Frame):
