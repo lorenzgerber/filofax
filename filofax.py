@@ -730,6 +730,7 @@ class Application(Frame):
 
     # GUI method to be called for showing all events
     def show_all(self):
+        self.lb_events.delete(0, END)
         self.filo.show_all_events(self.lb_events)
         self.display_date.set('all events in the database')
 
