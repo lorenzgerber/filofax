@@ -211,13 +211,21 @@ class Filofax:
     # Jumps to date 'date_time' or date of next event after 'date_time'
     def jump_to_date(self, date_input):
         from datetime import datetime
+        from tkinter import messagebox
         # find event_id and of next event equal or bigger than
         # date_time and set selected_event to it
         if self.mode == 1:
-            self.selected_date = datetime.strptime(date_input, "%y%m%d")
+            try:
+                self.selected_date = datetime.strptime(date_input, "%y%m%d")
+            except ValueError:
+                messagebox.showwarning('user entry error', 'your provided date value does not '
+                                                           'confirm with the required format')
         elif self.mode == 2:
-            self.selected_date = datetime.strptime(str(date_input +
-                                                       str(self.selected_date.day)), "%y%m%d")
+            try:
+                self.selected_date = datetime.strptime(str(date_input + str(self.selected_date.day)), "%y%m%d")
+            except ValueError:
+                messagebox.showwarning('user entry error', 'your provided date value does not '
+                                                           'confirm with the required format')
         self.populate_day_uuids()
         self.populate_month_uuids()
 
@@ -415,9 +423,14 @@ class Filofax:
     @staticmethod
     def string_date_time_convert(date, time):
         from datetime import datetime
-        date = datetime.strptime(str(date), "%y%m%d").date()
-        time = datetime.strptime(str(time), "%H%M").time()
-        date_time = datetime.combine(date, time)
+        from tkinter import messagebox
+        try:
+            date = datetime.strptime(str(date), "%y%m%d").date()
+            time = datetime.strptime(str(time), "%H%M").time()
+            date_time = datetime.combine(date, time)
+        except ValueError:
+            messagebox.showwarning('wrong date input', 'The provided date and/or time value(s)'
+                                                    ' did not confirm with the required format')
         return date_time
 
 
@@ -530,7 +543,7 @@ class Application(Frame):
         # create more pulldown menus
         self.edit_menu = Menu(self.menu_bar, tearoff=0)
         self.edit_menu.add_command(label="New Event...", command=self.call_enter_new_event)
-        self.edit_menu.add_command(label="Remove Event...", command=self.current_lb_selection)
+        self.edit_menu.add_command(label="Remove Event...", command=self.gui_remove_event)
         self.menu_bar.add_cascade(label="Edit", menu=self.edit_menu)
 
         self.mode_menu = Menu(self.menu_bar, tearoff=0)
@@ -549,7 +562,8 @@ class Application(Frame):
         self.opt_menu.add_command(label="Show all events", command=self.show_all)
         self.menu_bar.add_cascade(label="Options", menu=self.opt_menu)
 
-    def current_lb_selection(self):
+    # gui method for removing events
+    def gui_remove_event(self):
         from tkinter import messagebox
         # store the current selection of self.lb_events in a variable
         item = list(map(int, self.lb_events.curselection()))
@@ -579,7 +593,6 @@ class Application(Frame):
             else:
                 messagebox.showinfo('no event selected', 'you need to select an event first')
 
-
         # month mode
         elif self.filo.mode == 2:
             if len(item) > 0:
@@ -596,6 +609,9 @@ class Application(Frame):
         else:
             print('no event removed')
 
+    # method to call JumpTo popup window
+    # JumpTo popup can not be called direct from
+    # menu as in menu no args can be passed
     def call_jump_to(self):
         jumper = JumpToWindow(mode=self.filo.mode)
         self.wait_window(jumper.top)
@@ -603,6 +619,9 @@ class Application(Frame):
             self.filo.jump_to_date(jumper.data)
             self.show_current()
 
+    # method to call EnterNewEvent popup window
+    # EnterNewEvent popup can not be called direct from
+    # menu as in menu no args can be passed
     def call_enter_new_event(self):
         new_event = EnterNewEvent()
         self.wait_window(new_event.top)
@@ -616,6 +635,7 @@ class Application(Frame):
             self.show_current()
             print('event added')
 
+    # GUI method to be called for switching to event mode
     def mode_event(self):
         self.filo.mode = 0
         self.filo.populate_selected_event_date()
@@ -624,6 +644,7 @@ class Application(Frame):
         self.display_date.set('selected event')
         self.show_current()
 
+    # GUI method to be called for switching to day mode
     def mode_day(self):
         self.filo.mode = 1
         self.filo.populate_selected_event_date()
@@ -631,7 +652,7 @@ class Application(Frame):
         self.filo.populate_month_uuids()
         self.display_date.set(str(self.filo.selected_date.strftime('%A %d %B %Y')))
         self.show_current()
-
+    # GUI method to be called for switching to month mode
     def mode_month(self):
         self.filo.mode = 2
         self.filo.populate_selected_event_date()
@@ -640,6 +661,7 @@ class Application(Frame):
         self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
         self.show_current()
 
+    # GUI method to be called for showing previous entry (event/day/month)
     def show_previous(self):
         self.lb_events.delete(0, END)
         self.filo.previous_unit()
@@ -651,6 +673,7 @@ class Application(Frame):
         elif self.filo.mode == 2:
             self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
 
+    # GUI method to be called for showing current entry (event/day/month)
     def show_current(self):
         self.lb_events.delete(0, END)
         self.filo.show_current(self.lb_events)
@@ -661,6 +684,7 @@ class Application(Frame):
         elif self.filo.mode == 2:
             self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
 
+    # GUI method to be called for showing next entry (event/day/month)
     def show_next(self):
         self.lb_events.delete(0, END)
         self.filo.next_unit()
@@ -672,10 +696,12 @@ class Application(Frame):
         elif self.filo.mode == 2:
             self.display_date.set(str(self.filo.selected_date.strftime('%B %Y')))
 
+    # GUI method to be called for showing all events
     def show_all(self):
         self.filo.show_all_events(self.lb_events)
         self.display_date.set('all events in the database')
 
+    # GUI method to be called for save and quit filofax application
     def save_quit(self):
         self.filo.save()
         self.quit()
@@ -683,31 +709,26 @@ class Application(Frame):
 # popup window for 'jump to'
 class JumpToWindow(Frame):
     def __init__(self, master=None, mode=0):
-        ttk.Frame.__init__(self, master)
-        self.grid()
+        ttk.Frame.__init__(self, master).grid()
         top = self.top = Toplevel(self)
+        # event mode
         if mode == 0:
-            self.label = Label(top, text='Please change to day or month mode')
-            self.label.grid(row=0, column=0)
+            self.label = Label(top, text='Please change to day or month mode').grid(row=0, column=0)
             self.data = False
-            self.button = Button(top, text='OK', command=self.top.destroy)
-            self.button.grid(row=1)
+            self.button = Button(top, text='OK', command=self.top.destroy).grid(row=1)
+        # day mode
         if mode == 1:
-            self.label = Label(top, text='Please enter day YYMMDD')
-            self.label.grid(row=0, column=0)
-            self.entry = Entry(top)
-            self.entry.grid(row=1)
-            self.button = Button(top, text='OK', command=self.on_button)
-            self.button.grid(row=2)
-
+            self.label = Label(top, text='Please enter day YYMMDD').grid(row=0, column=0)
+            self.entry = Entry(top).grid(row=1)
+            self.button = Button(top, text='OK', command=self.on_button).grid(row=2)
+        # month mode
         if mode == 2:
             self.label = Label(top, text='Please enter month YYMM')
             self.label.grid(row=0, column=0)
-            self.entry = Entry(top)
-            self.entry.grid(row=1)
-            self.button = Button(top, text='OK', command=self.on_button)
-            self.button.grid(row=2)
+            self.entry = Entry(top).grid(row=1)
+            self.button = Button(top, text='OK', command=self.on_button).grid(row=2)
 
+    # evaluating entry on button press event (JumpToWindow)
     def on_button(self):
         self.data = self.entry.get()
         self.top.destroy()
@@ -723,19 +744,18 @@ class EnterNewEvent(Frame):
         self.label_event = Label(top, text='Event').grid(column=0, row=1)
         self.label_time = Label(top, text='Time (hhmm)').grid(column=0, row=2)
         self.label_date = Label(top, text='Date (yymmdd)').grid(column=0, row=3)
-        self.entry_event = Entry(top)
-        self.entry_event.grid(column=2, row=1)
-        self.entry_time = Entry(top)
-        self.entry_time.grid(column=2, row=2)
-        self.entry_date = Entry(top)
-        self.entry_date.grid(column=2, row=3)
+        self.entry_event = Entry(top).grid(column=2, row=1)
+        self.entry_time = Entry(top).grid(column=2, row=2)
+        self.entry_date = Entry(top).grid(column=2, row=3)
         self.button_ok = ttk.Button(top, text='OK', command=self.on_ok_button).grid(column=1, row=4)
         self.button_cancel = ttk.Button(top, text='Cancel', command=self.on_cancel_button).grid(column=2, row=4)
 
+    # evaluating on_cancel button press event
     def on_cancel_button(self):
         self.date = False
         self.top.destroy()
 
+    # evaluating ok_button press event in EnterNewEvent popup
     def on_ok_button(self):
         self.event_data = self.entry_event.get()
         self.time_data = self.entry_time.get()
