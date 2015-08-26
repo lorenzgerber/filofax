@@ -716,7 +716,8 @@ class JumpToWindow(Frame):
         on_button:      method to evaluate entry
     """
     def __init__(self, master=None, mode=0):
-        ttk.Frame.__init__(self, master).grid()
+        ttk.Frame.__init__(self, master)
+        self.grid()
         top = self.top = Toplevel(self)
         # event mode
         if mode == 0:
@@ -726,13 +727,15 @@ class JumpToWindow(Frame):
         # day mode
         if mode == 1:
             self.label = Label(top, text='Please enter day YYMMDD').grid(row=0, column=0)
-            self.entry = Entry(top).grid(row=1)
+            self.entry = Entry(top)
+            self.entry.grid(row=1)
             self.button = Button(top, text='OK', command=self.on_button).grid(row=2)
         # month mode
         if mode == 2:
             self.label = Label(top, text='Please enter month YYMM')
             self.label.grid(row=0, column=0)
-            self.entry = Entry(top).grid(row=1)
+            self.entry = Entry(top)
+            self.entry.grid(row=1)
             self.button = Button(top, text='OK', command=self.on_button).grid(row=2)
 
     # evaluating entry on button press event (JumpToWindow)
@@ -769,9 +772,12 @@ class EnterNewEvent(Frame):
         self.label_event = Label(top, text='Event').grid(column=0, row=1)
         self.label_time = Label(top, text='Time (hhmm)').grid(column=0, row=2)
         self.label_date = Label(top, text='Date (yymmdd)').grid(column=0, row=3)
-        self.entry_event = Entry(top).grid(column=2, row=1)
-        self.entry_time = Entry(top).grid(column=2, row=2)
-        self.entry_date = Entry(top).grid(column=2, row=3)
+        self.entry_event = Entry(top)
+        self.entry_event.grid(column=2, row=1)
+        self.entry_time = Entry(top)
+        self.entry_time.grid(column=2, row=2)
+        self.entry_date = Entry(top)
+        self.entry_date.grid(column=2, row=3)
         self.button_ok = ttk.Button(top, text='OK', command=self.on_ok_button).grid(column=1, row=4)
         self.button_cancel = ttk.Button(top, text='Cancel', command=self.on_cancel_button).grid(column=2, row=4)
 
