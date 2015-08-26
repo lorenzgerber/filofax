@@ -1,68 +1,64 @@
 # Programmeringsteknik webbkurs KTH Kodskelett
 # Lorenz Gerber
-# 22.07.2015
-# Draft of classes and functions for the
+# 26.08.2015
 # '192 Filofax' exercise
 #
 # - data are stored in a file using 'pickle'
 # - each event one line
-# - empty days are created on the fly for
-#   visualisation but not as event objects without
-#   description
-
-
+# - There are three main modes for showing events in the GUI:
+#   - 'event', shows always one event. Previous/Next jumps to a valid event
+#   - 'day',  shows all events from one day/date. Previous/Next is sequential, showing also empty days
+#   - 'month', shows all events from one month. Previous/Next is sequential, showing also empty months
+# As additional function, one can also see all events stored in the filofax.
 class Filofax:
-    """ This class will be a data container for all
-    FiloEvent class objects.
+    """ This class is the data container for FiloEvent class objects.
 
     Attributes:
-        event_list              list        - here all FiloEvent
-                                      class objects are stored
+        event_list              list         - list to store all FiloEvent class objects
         selected_date           date         - the selected date
         selected_event          uuid         - the ID of the selected event
-        selected_day_uuids    list         - list with (currently list indices), future, should be uuid's?
-        selected_month_uuids  list         - list with (currently list indices), future, should be uuid's?
+        selected_day_uuids      list         - list with uuid's of the selected day
+        selected_month_uuids    list         - list with uuid's of the selected month
         mode                    numeric      - value 0 = event, 1 = day, 2 = month
 
     Methods:
-        __init__:
-        __str__:
-        menu:
-        read_user_selection:
-        add_event:
-        remove_event_interface:
-        remove_event:
-        populate_selected_event_date:
-        populate_selected_date:
-        populate_selected_event_day:
-        populate_selected_event_month:
-        populate_day_uuids:
-        populate month_uuids:
-        update_chain_event:
-        update_chain_day:
-        update_chain_month:
-        jump_to_date:
-        find_event_by_datetime:
-        last_event:
-        first_event:
-        selected_event_index:
-        next_unit:
-        next_event:
-        next_day:
-        next_month:
-        previous_unit:
-        previous_event:
-        previous_day:
-        previous_month:
-        show_current:
-        show_event:
-        show_day:
-        show_month:
-        show_all_events:
-        sort_events:
-        save:
-        load:
-        string_date_time_convert:
+        __init__:                       constructor for Filofax class
+        __str__:                        print out the number of entries in filofax event_list
+        add_event:                      method to add event to event_list
+        remove_event:                   method to remove event using the uuid of the event
+        populate_selected_event_date:   method to set uuid of selected_event according to selected_date
+        populate_selected_date:         method to set selected_date according to selected_event
+        populate_selected_event_day:    populate selected_event from selected_date for day jump
+        populate_selected_event_month:  populate selected_event from selected_date for month jump
+        populate_day_uuids:             populate the day_indices from selected_date
+        populate month_uuids:           populate the month_indices from the selected_date
+        update_chain_event:             update from selected_event: selected_date, day_indices, month_indices
+        update_chain_day:               update from selected_date for day jump
+                                        selected_event, day_indices, month_indices
+        update_chain_month:             update from selected_date for month jump
+        jump_to_date:                   Jumps to date 'date_time' or date of next event after 'date_time'
+        find_event_by_datetime:         finds the event equal or next to given datetime
+        last_event:                     check if it is last event
+        first_event:                    check if it is first event
+        selected_event_index:           get index of selected event
+        next_unit:                      method to assign event, day or month mode for jump to next
+        next_event:                     method to jump to next selected event
+        next_day:                       method to jump to next selected day
+        next_month:                     method to jump to next selected month
+        previous_unit:                  method to assign event, day or month mode for jump to previous
+        previous_event:                 method to jump to previous selected event
+        previous_day:                   method to jump to previous selected day
+        previous_month:                 method to jump to previous selected month
+        show_current:                   method to assign event, day or month mode for show current
+        show_event:                     method to show current event
+        show_day:                       method to show current day
+        show_month:                     method to show current month
+        show_all_events:                method to show all events
+        delta_months:                   method to calculate difference between two month
+        sort_events:                    method to sort the event_list according date and time
+        save:                           save event_list by pickle to file
+        load:                           load event_list through pickle from file
+        string_date_time_convert:       converting user entry into datetime format
     """
 
     # instantiates a new filofax class object
@@ -452,6 +448,10 @@ class FiloEvent:
         description:    string     - description of event
 
     methods:
+        __init__:
+        __str__:
+        user_input:
+
     """
 
     # date and time as date/time/datetime.date()/datetime.time() objects
@@ -460,6 +460,12 @@ class FiloEvent:
         self.unique_id = uuid4()
         self.date_time = date_time
         self.description = description
+
+    def __str__(self):
+        event_summary = ('Date: ' + str(self.date_time.date()) + '\n' +
+                         'Time: ' + str(self.date_time.time()) + '\n' +
+                         'Description: ' + str(self.description) + '.')
+        return event_summary
 
     @classmethod
     def user_input(cls):
@@ -474,12 +480,6 @@ class FiloEvent:
         print(cls.time)
         return FiloEvent(cls.date_time, cls.description)
 
-    def __str__(self):
-        event_summary = ('Date: ' + str(self.date_time.date()) + '\n' +
-                         'Time: ' + str(self.date_time.time()) + '\n' +
-                         'Description: ' + str(self.description) + '.')
-        return event_summary
-
 
 from tkinter import *
 from tkinter import ttk
@@ -488,6 +488,38 @@ from datetime import datetime
 
 # main tkinter GUI class
 class Application(Frame):
+    """This is the base class for the tkinter GUI system
+
+    Attributes:
+        filo:               object      - a Filofax object, program logic
+        scrollbar:          object      - tkinter scrollbar, GUI element for listbox when scrolling is needed
+        lb_events:          object      - tkinter listbox, GUI element to show the events
+        display_date:       string      - date to be visualized in date_label GUI element
+        date_label:         object      - label, GUI element to show date/month
+        next_button:        object      - button, GUI element
+        previous_button:    object      - button, GUI element
+        menu_bar:           object      - menu, top level menu bar, GUI element
+        file_menu:          object      - menu for file operations, GUI element
+        edit_menu:          object      - menu for new/remove, GUI element
+        mode_menu:          object      - menu to select between event, day and month mode, GUI element
+        nav_menu:           object      - menu for previous/next, jump to, GUI element
+        opt_menu:           object      - menu to show all events in lb_events listbox, GUI element
+
+    methods:
+        __init__:               constructor for GUI system
+        main_frame:             constructs the whole GUI, is called withing __init__
+        gui_remove_event:       GUI method to remove event. Calls finally remove_event method from filo object
+        call_jump_to:           method that will call constructor of JumpTo popup window class
+        call_enter_new_event:   method that will call constructor of EnterNewEvent popup window class
+        mode_event:             GUI method to switch to event mode in filo
+        mode_day:               GUI method to switch to day mode in filo
+        mode_month:             GUI method to switch to month mode in filo
+        show_previous:          GUI method to jump to and show previous event/day/month of filo
+        show_current:           GUI method to show current event/day/month of filo
+        show_next:              GUI method to jump to and show next event/day/month of filo
+        show_all:               GUI method to show all events from filo
+        save_quit:              GUI method to call save and quit method from filo
+    """
     def __init__(self, title, master=None):
         ttk.Frame.__init__(self, master, padding=" 3 3 3 3", relief='sunken')
         self.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -708,6 +740,16 @@ class Application(Frame):
 
 # popup window for 'jump to'
 class JumpToWindow(Frame):
+    """ Class to create tkinter popup window for the JumpTo functionality
+
+    Attributes:
+        label   object      label element, label showing the infor for the user
+        entry   object      Entry element, field to enter the jump to date
+        button  object      Button element, OK button
+    Methods:
+        __init__:       constructor method to create pop up window
+        on_button:      method to evaluate entry
+    """
     def __init__(self, master=None, mode=0):
         ttk.Frame.__init__(self, master).grid()
         top = self.top = Toplevel(self)
@@ -736,6 +778,24 @@ class JumpToWindow(Frame):
 
 # Pop-up window for entering a new event
 class EnterNewEvent(Frame):
+    """ Class to create popup window for EnterNewEvent functionality
+
+    Attributes:
+        label_main      object      label element, label showing the info for the user
+        label_event     object      label element, label showing the event
+        label_time      object      label element, label for showing time
+        label_date      object      label element, label for showing date
+        entry_event     object      Entry element, for event
+        entry_time      object      Entry element, for time
+        entry_date      object      Entry element, for date
+        button_ok       object      Button element, OK
+        button_cancel   object      Button element, cancel
+
+    Methods:
+        __init__:           constructor method to create pop up window
+        on_cancel_button:   method to evaluate cancel button press event
+        on_ok_button:       method to evaluate ok butotn press event
+    """
     def __init__(self, master=None):
         ttk.Frame.__init__(self, master)
         self.grid()
