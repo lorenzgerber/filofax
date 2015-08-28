@@ -749,15 +749,15 @@ class EnterNewEvent(Frame):
     """ Class to create popup window for EnterNewEvent functionality
 
     Attributes:
-        label_main      object      label element, label showing the info for the user
-        label_event     object      label element, label showing the event
-        label_time      object      label element, label for showing time
-        label_date      object      label element, label for showing date
-        entry_event     object      Entry element, for event
-        entry_time      object      Entry element, for time
-        entry_date      object      Entry element, for date
-        button_ok       object      Button element, OK
-        button_cancel   object      Button element, cancel
+        label_main      object      label, tkinter gui element, label showing the info for the user
+        label_event     object      label, tkinter gui element, label showing the event
+        label_time      object      label, tkinter gui element, label for showing time
+        label_date      object      label, tkinter gui element, label for showing date
+        entry_event     object      Entry, tkinter gui element, for event
+        entry_time      object      Entry, tkinter gui element, for time
+        entry_date      object      Entry, tkinter gui element, for date
+        button_ok       object      Button, tkinter gui element, OK
+        button_cancel   object      Button, tkinter gui element, cancel
 
     Methods:
         __init__:           constructor method to create pop up window
@@ -793,7 +793,35 @@ class EnterNewEvent(Frame):
         self.date_data = self.entry_date.get()
         self.top.destroy()
 
+# startup window of application "Filofax" implemented as separate
+# tkinter gui app called before the real Filofax app
+class StartUp(Frame):
+    """ Class to create a pop-up window before the real program start giving some information
+    on the program
 
-# Popup window to ask if selected event shall be deleted
+    Attributes:
+        label_info      object      label, tkinter gui element
+        button_ok       object      button, tkinter gui element
+
+    Methods:
+        __init__:       constructor of StartUp class
+    """
+    def __init__(self, master=None):
+        ttk.Frame.__init__(self, master, padding=" 3 3 3 3", relief='sunken')
+        self.grid(column=0, row=0, sticky=(N, W, E, S))
+        self.label_info = Label(self, text='Welcome to \'Filofax\', a simple \n'
+                                      'agenda program.\n\n On startup, \'Filofax\' will show \n'
+                                      'the next upcoming event. You can jump between events\n'
+                                      'with the \'previous\'/\'next\' button.\n\n'
+                                      'in the menu \'Display\', you can choose between the \'event\'\n'
+                                      '\'day\' and \'month\' mode. \n\n'
+                                      'Lorenz Gerber, 2015')
+        self.label_info.grid(sticky=(N, W, E), row=0)
+        self.button_ok = Button(self, text='OK', command=self.quit)
+        self.button_ok.grid(row=1)
+
+
+start = StartUp()
+start.mainloop()
 app = Application('Filofax')
 app.mainloop()
